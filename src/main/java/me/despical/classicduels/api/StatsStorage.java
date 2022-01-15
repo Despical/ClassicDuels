@@ -23,8 +23,8 @@ import me.despical.classicduels.Main;
 import me.despical.classicduels.user.data.MysqlManager;
 import me.despical.classicduels.utils.Debugger;
 import me.despical.classicduels.utils.MessageUtils;
-import me.despical.commonsbox.configuration.ConfigUtils;
-import me.despical.commonsbox.sorter.SortUtils;
+import me.despical.commons.configuration.ConfigUtils;
+import me.despical.commons.sorter.SortUtils;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -37,13 +37,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 /**
- *
- * Class for accessing user statistics.
- *
  * @author Despical
- * @since 1.0.0
  * <p>
  * Created at 11.10.2020
  */
@@ -82,16 +79,7 @@ public class StatsStorage {
 		}
 
 		FileConfiguration config = ConfigUtils.getConfig(plugin, "stats");
-		Map<UUID, Integer> stats = new TreeMap<>();
-
-		for (String string : config.getKeys(false)) {
-			if (string.equals("data-version")) {
-				continue;
-			}
-
-			stats.put(UUID.fromString(string), config.getInt(string + "." + stat.getName()));
-		}
-
+		Map<UUID, Integer> stats = config.getKeys(false).stream().collect(Collectors.toMap(UUID::fromString, string -> config.getInt(string + "." + stat.getName()), (a, b) -> b));
 		return SortUtils.sortByValue(stats);
 	}
 
@@ -107,16 +95,13 @@ public class StatsStorage {
 		return plugin.getUserManager().getUser(player).getStat(statisticType);
 	}
 
-	/**
-	 * Available statistics to get.
-	 */
 	public enum StatisticType {
 		KILLS("kills", true), DEATHS("deaths", true), WINS("wins", true),
 		LOSES("loses", true), WIN_STREAK("winstreak", true), GAMES_PLAYED("gamesplayed", true),
-		LOCAL_DAMAGE_DEALT("local_damage_dealt", false), LOCAL_HEALTH_REGEN("local_health_regen", false),
-		LOCAL_ACCURATE_HITS("local_accurate_hits", false), LOCAL_MISSED_HITS("local_missed_hits", false),
-		LOCAL_SHOOTED_ARROWS("local_shooted_arrows", false), 	LOCAL_ACCURATE_ARROWS("local_accurate_arrows", false),
-		LOCAL_WON("local_won", false);
+		LOCAL_DAMAGE_DEALT("local_damage_dealt"), LOCAL_HEALTH_REGEN("local_health_regen"),
+		LOCAL_ACCURATE_HITS("local_accurate_hits"), LOCAL_MISSED_HITS("local_missed_hits"),
+		LOCAL_SHOOTED_ARROWS("local_shooted_arrows"), 	LOCAL_ACCURATE_ARROWS("local_accurate_arrows"),
+		LOCAL_WON("local_won");
 
 		private final String name;
 		private final boolean persistent;
@@ -124,6 +109,10 @@ public class StatsStorage {
 		StatisticType(String name, boolean persistent) {
 			this.name = name;
 			this.persistent = persistent;
+		}
+
+		StatisticType(String name) {
+			this(name, false);
 		}
 
 		public String getName() {

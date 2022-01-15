@@ -21,10 +21,10 @@ package me.despical.classicduels.handlers;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.despical.classicduels.Main;
 import me.despical.classicduels.arena.Arena;
-import me.despical.commonsbox.compat.VersionResolver;
-import me.despical.commonsbox.configuration.ConfigUtils;
-import me.despical.commonsbox.string.StringFormatUtils;
-import me.despical.commonsbox.string.StringMatcher;
+import me.despical.commons.compat.VersionResolver;
+import me.despical.commons.configuration.ConfigUtils;
+import me.despical.commons.string.StringFormatUtils;
+import me.despical.commons.string.StringMatcher;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -66,8 +66,16 @@ public class ChatManager {
 		return ChatColor.translateAlternateColorCodes('&', message);
 	}
 
+	public String prefixedRawMessage(String message) {
+		return prefix + colorRawMessage(message);
+	}
+
 	public String colorMessage(String message) {
 		return colorRawMessage(config.getString(message));
+	}
+
+	public String prefixedMessage(String message) {
+		return prefix +  colorRawMessage(config.getString(message));
 	}
 
 	public String colorMessage(String message, Player player) {

@@ -22,11 +22,7 @@ import me.despical.classicduels.arena.Arena;
 import org.bukkit.event.Event;
 
 /**
- *
- * Represents Classic Duels game related events.
- *
  * @author Despical
- * @since 1.0.0
  * <p>
  * Created at 11.10.2020
  */

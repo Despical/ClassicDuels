@@ -24,12 +24,8 @@ import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
 /**
- *
- * Called when arena is stopped.
- *
  * @author Despical
  * @since 1.0.0
- * @see Arena
  * <p>
  * Created at 11.10.2020
  */

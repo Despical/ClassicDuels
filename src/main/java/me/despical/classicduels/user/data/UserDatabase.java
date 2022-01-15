@@ -23,31 +23,30 @@ import me.despical.classicduels.user.User;
 
 /**
  * @author Despical
- * @since 1.0.0
  * <p>
  * Created at 02.07.2020
  */
 public interface UserDatabase {
 
 	/**
-	 * Saves player statistic into yaml or MySQL storage based on user choice
+	 * Saves player statistic into active database.
 	 *
-	 * @param user user to retrieve statistic from
-	 * @param stat stat to save to storage
+	 * @param user to retrieve statistic from
+	 * @param stat to save to storage
 	 */
 	void saveStatistic(User user, StatsStorage.StatisticType stat);
 
 	/**
-	 * Saves player statistic into yaml or MySQL storage based on user choice
+	 * Saves player statistic to active database.
 	 *
-	 * @param user user to retrieve statistic from
+	 * @param user to retrieve statistic from
 	 */
 	void saveAllStatistic(User user);
 
 	/**
-	 * Loads player statistic from yaml or MySQL storage based on user choice
+	 * Loads player statistic from active database.
 	 *
-	 * @param user user to load statistic for
+	 * @param user to load statistic for
 	 */
 	void loadStatistics(User user);
 

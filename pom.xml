@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>me.despical</groupId>
     <artifactId>classic-duels</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
     <name>Classic Duels</name>
 
     <properties>
@@ -51,18 +51,22 @@
         <dependency>
             <groupId>com.destroystokyo.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.16.4-R0.1-SNAPSHOT</version>
+            <version>1.16.5-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.github.Despical</groupId>
-            <artifactId>commons-box</artifactId>
-            <version>1.2.2</version>
-            <scope>compile</scope>
+            <artifactId>Commons</artifactId>
+            <version> 1.4.3</version>
         </dependency>
         <dependency>
             <groupId>com.github.Despical</groupId>
             <artifactId>InventoryFramework</artifactId>
+            <version>1.1.6</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.Despical</groupId>
+            <artifactId>CommandFramework</artifactId>
             <version>1.0.7</version>
         </dependency>
         <dependency>
@@ -75,19 +79,11 @@
             <groupId>org.bstats</groupId>
             <artifactId>bstats-bukkit</artifactId>
             <version>1.7</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.6</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
             <version>13.0</version>
-            <scope>compile</scope>
         </dependency>
     </dependencies>
 
@@ -142,14 +138,6 @@
                         </goals>
                         <configuration>
                             <relocations>
-                                <relocation>
-                                    <pattern>me.despical.inventoryframework</pattern>
-                                    <shadedPattern>me.despical.classicduels.utils.inventoryframework</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>me.despical.commonsbox</pattern>
-                                    <shadedPattern>me.despical.classicduels.commonsbox</shadedPattern>
-                                </relocation>
                                 <relocation>
                                     <pattern>org.bstats</pattern>
                                     <shadedPattern>me.despical.classicduels.utils</shadedPattern>

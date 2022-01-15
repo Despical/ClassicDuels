@@ -20,8 +20,8 @@ package me.despical.classicduels.arena;
 
 import me.despical.classicduels.Main;
 import me.despical.classicduels.utils.Debugger;
-import me.despical.commonsbox.configuration.ConfigUtils;
-import me.despical.commonsbox.serializer.LocationSerializer;
+import me.despical.commons.configuration.ConfigUtils;
+import me.despical.commons.serializer.LocationSerializer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -33,7 +33,6 @@ import java.util.Random;
 
 /**
  * @author Despical
- * @since 1.0.0
  * <p>
  * Created at 11.10.2020
  */
@@ -43,23 +42,14 @@ public class ArenaRegistry {
 	private static final List<Arena> arenas = new ArrayList<>();
 	private static int bungeeArena = -999;
 
-	/**
-	 * Checks if player is in any arena
-	 *
-	 * @param player player to check
-	 * @return true when player is in arena, false if otherwise
-	 */
 	public static boolean isInArena(Player player) {
 		return getArena(player) != null;
 	}
 
-	/**
-	 * Returns arena where the player is
-	 *
-	 * @param p target player
-	 * @return Arena or null if not playing
-	 * @see #isInArena(Player) to check if player is playing
-	 */
+	public static boolean isArena(String name) {
+		return getArena(name) != null;
+	}
+
 	public static Arena getArena(Player p) {
 		if (p == null || !p.isOnline()) {
 			return null;
@@ -76,12 +66,6 @@ public class ArenaRegistry {
 		return null;
 	}
 
-	/**
-	 * Returns arena based by ID
-	 *
-	 * @param id name of arena
-	 * @return Arena or null if not found
-	 */
 	public static Arena getArena(String id) {
 		for (Arena loopArena : arenas) {
 			if (loopArena.getId().equalsIgnoreCase(id)) {
@@ -133,9 +117,9 @@ public class ArenaRegistry {
 			arena = new Arena(id);
 			arena.setReady(true);
 			arena.setMapName(config.getString(s + "mapname", "undefined"));
-			arena.setFirstPlayerLocation(LocationSerializer.locationFromString(config.getString(s + "firstplayerlocation")));
-			arena.setSecondPlayerLocation(LocationSerializer.locationFromString(config.getString(s+ "secondplayerlocation")));
-			arena.setEndLocation(LocationSerializer.locationFromString(config.getString(s + "endlocation")));
+			arena.setFirstPlayerLocation(LocationSerializer.fromString(config.getString(s + "firstplayerlocation")));
+			arena.setSecondPlayerLocation(LocationSerializer.fromString(config.getString(s+ "secondplayerlocation")));
+			arena.setEndLocation(LocationSerializer.fromString(config.getString(s + "endlocation")));
 
 			if (!config.getBoolean(s + "isdone")) {
 				Debugger.sendConsoleMessage(plugin.getChatManager().colorMessage("Validator.Invalid-Arena-Configuration").replace("%arena%", id).replace("%error%", "NOT VALIDATED"));

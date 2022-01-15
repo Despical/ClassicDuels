@@ -26,12 +26,7 @@ import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
 /**
- *
- * Called when player receive new statistic.
- *
  * @author Despical
- * @see StatsStorage.StatisticType
- * @since 1.0.0
  * <p>
  * Created at 11.10.2020
  */

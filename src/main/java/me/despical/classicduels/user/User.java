@@ -30,6 +30,7 @@ import org.bukkit.scoreboard.ScoreboardManager;
 
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * @author Despical
@@ -42,11 +43,13 @@ public class User {
 	private static final Main plugin = JavaPlugin.getPlugin(Main.class);
 	private final ScoreboardManager scoreboardManager = Bukkit.getScoreboardManager();
 	private final Player player;
+	private final UUID uuid;
 	private boolean spectator = false;
 	private final Map<StatsStorage.StatisticType, Integer> stats = new EnumMap<>(StatsStorage.StatisticType.class);
 
-	public User(Player player) {
-		this.player = player;
+	public User(UUID uuid) {
+		this.uuid = uuid;
+		this.player = plugin.getServer().getPlayer(uuid);
 	}
 
 	public Arena getArena() {
@@ -74,6 +77,10 @@ public class User {
 		}
 
 		return stats.get(stat);
+	}
+
+	public UUID getUniqueID() {
+		return uuid;
 	}
 
 	public void removeScoreboard() {

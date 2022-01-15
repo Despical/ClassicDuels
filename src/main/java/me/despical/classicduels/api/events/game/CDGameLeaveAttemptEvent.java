@@ -25,12 +25,7 @@ import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
 /**
- *
- * Called when player is attempting to leave arena.
- *
  * @author Despical
- * @since 1.0.0
- * @see Arena
  * <p>
  * Created at 11.10.2020
  */

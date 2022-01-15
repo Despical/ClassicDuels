@@ -39,12 +39,13 @@ import me.despical.classicduels.user.User;
 import me.despical.classicduels.user.UserManager;
 import me.despical.classicduels.user.data.MysqlManager;
 import me.despical.classicduels.utils.*;
-import me.despical.commonsbox.compat.VersionResolver;
-import me.despical.commonsbox.configuration.ConfigUtils;
-import me.despical.commonsbox.database.MysqlDatabase;
-import me.despical.commonsbox.miscellaneous.AttributeUtils;
-import me.despical.commonsbox.scoreboard.ScoreboardLib;
-import me.despical.commonsbox.serializer.InventorySerializer;
+import me.despical.commandframework.CommandFramework;
+import me.despical.commons.compat.VersionResolver;
+import me.despical.commons.configuration.ConfigUtils;
+import me.despical.commons.database.MysqlDatabase;
+import me.despical.commons.miscellaneous.AttributeUtils;
+import me.despical.commons.scoreboard.ScoreboardLib;
+import me.despical.commons.serializer.InventorySerializer;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -56,7 +57,6 @@ import java.util.Arrays;
 
 /**
  * @author Despical
- * @since 1.0.0
  * <p>
  * Created at 11.10.2020
  */
@@ -69,7 +69,7 @@ public class Main extends JavaPlugin {
 	private MysqlDatabase database;
 	private SignManager signManager;
 	private ConfigPreferences configPreferences;
-	private CommandHandler commandHandler;
+	private CommandFramework commandFramework;
 	private ChatManager chatManager;
 	private LanguageManager languageManager;
 	private CuboidSelector cuboidSelector;
@@ -112,14 +112,12 @@ public class Main extends JavaPlugin {
 
 	private boolean validateIfPluginShouldStart() {
 		if (VersionResolver.isCurrentLower(VersionResolver.ServerVersion.v1_9_R1)) {
-			MessageUtils.thisVersionIsNotSupported();
 			Debugger.sendConsoleMessage("&cYour server version is not supported by Classic Duels!");
 			Debugger.sendConsoleMessage("&cSadly, we must shut off. Maybe you consider changing your server version?");
 			return false;
 		} try {
 			Class.forName("org.spigotmc.SpigotConfig");
 		} catch (ClassNotFoundException e) {
-			MessageUtils.thisVersionIsNotSupported();
 			Debugger.sendConsoleMessage("&cYour server software is not supported by Classic Duels!");
 			Debugger.sendConsoleMessage("&cWe support only Spigot and Spigot forks only! Shutting off...");
 			return false;
@@ -183,9 +181,11 @@ public class Main extends JavaPlugin {
 
 		languageManager = new LanguageManager(this);
 		userManager = new UserManager(this);
+
 		SpecialItem.loadAll();
 		PermissionManager.init();
 		KitRegistry.registerBaseKit();
+
 		new SpectatorEvents(this);
 		new QuitEvent(this);
 		new JoinEvent(this);
@@ -200,7 +200,7 @@ public class Main extends JavaPlugin {
 		signManager.loadSigns();
 		signManager.updateSigns();
 		rewardsFactory = new RewardsFactory(this);
-		commandHandler = new CommandHandler(this);
+		commandFramework = new CommandFramework(this);
 		cuboidSelector = new CuboidSelector(this);
 
 		registerSoftDependenciesAndServices();
@@ -212,7 +212,7 @@ public class Main extends JavaPlugin {
 
 		startPluginMetrics();
 
-		if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+		if (getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
 			Debugger.debug("Hooking into PlaceholderAPI");
 			new PlaceholderManager().register();
 		}
@@ -259,10 +259,9 @@ public class Main extends JavaPlugin {
 				return;
 			}
 
-			MessageUtils.updateIsHere();
 			Debugger.sendConsoleMessage("[ClassicDuels] Found a new version available: v" + result.getNewestVersion());
 			Debugger.sendConsoleMessage("[ClassicDuels] Download it SpigotMC:");
-			Debugger.sendConsoleMessage("[ClassicDuels] spigotmc.org/resources/classic-duels-1-9-1-16-4.85356/");
+			Debugger.sendConsoleMessage("[ClassicDuels] spigotmc.org/resources/classic-duels.85356/");
 		});
 	}
 
@@ -296,8 +295,8 @@ public class Main extends JavaPlugin {
 		return signManager;
 	}
 
-	public CommandHandler getCommandHandler() {
-		return commandHandler;
+	public CommandFramework getCommandFramework() {
+		return commandFramework;
 	}
 
 	public ChatManager getChatManager() {
