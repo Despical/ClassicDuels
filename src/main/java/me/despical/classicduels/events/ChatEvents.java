@@ -36,7 +36,6 @@ import java.util.regex.Pattern;
 
 /**
  * @author Despical
- * @since 1.0.0
  * <p>
  * Created at 11.10.2020
  */

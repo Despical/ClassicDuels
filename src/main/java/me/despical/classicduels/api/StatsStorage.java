@@ -22,7 +22,6 @@ import me.despical.classicduels.ConfigPreferences;
 import me.despical.classicduels.Main;
 import me.despical.classicduels.user.data.MysqlManager;
 import me.despical.classicduels.utils.Debugger;
-import me.despical.classicduels.utils.MessageUtils;
 import me.despical.commons.configuration.ConfigUtils;
 import me.despical.commons.sorter.SortUtils;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -71,7 +70,6 @@ public class StatsStorage {
 				return column;
 			} catch (SQLException e) {
 				plugin.getLogger().log(Level.WARNING, "SQL Exception occurred! " + e.getSQLState() + " (" + e.getErrorCode() + ")");
-				MessageUtils.errorOccurred();
 				Debugger.sendConsoleMessage("&cCannot get contents from MySQL database!");
 				Debugger.sendConsoleMessage("&cCheck configuration of mysql.yml file or disable mysql option in config.yml");
 				return Collections.emptyMap();

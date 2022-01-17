@@ -23,46 +23,43 @@ import me.despical.classicduels.Main;
 import me.despical.classicduels.api.StatsStorage;
 import me.despical.classicduels.arena.Arena;
 import me.despical.classicduels.arena.ArenaState;
-import me.despical.classicduels.user.User;
 import me.despical.classicduels.utils.Utils;
-import me.despical.commonsbox.scoreboard.ScoreboardLib;
-import me.despical.commonsbox.scoreboard.common.EntryBuilder;
-import me.despical.commonsbox.scoreboard.type.Entry;
-import me.despical.commonsbox.scoreboard.type.Scoreboard;
-import me.despical.commonsbox.scoreboard.type.ScoreboardHandler;
-import me.despical.commonsbox.string.StringFormatUtils;
+import me.despical.commons.scoreboard.ScoreboardLib;
+import me.despical.commons.scoreboard.common.EntryBuilder;
+import me.despical.commons.scoreboard.type.Entry;
+import me.despical.commons.scoreboard.type.Scoreboard;
+import me.despical.commons.scoreboard.type.ScoreboardHandler;
+import me.despical.commons.string.StringFormatUtils;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Despical
- * @since 1.0.0
  * <p>
  * Created at 11.10.2020
  */
 public class ScoreboardManager {
 
-	private final Main plugin = JavaPlugin.getPlugin(Main.class);
-	private final List<Scoreboard> scoreboards = new ArrayList<>();
+	private final Main plugin;
 	private final Arena arena;
+	private final Set<Scoreboard> scoreboards;
 
-	public ScoreboardManager(Arena arena) {
+	private final int gameplayTime;
+
+	public ScoreboardManager(Main plugin, Arena arena) {
+		this.plugin = plugin;
 		this.arena = arena;
+		this.scoreboards = new HashSet<>();
+		this.gameplayTime = plugin.getConfig().getInt("Classic-Gameplay-Time", 900);
 	}
 
-	/**
-	 * Creates arena scoreboard for target user
-	 *
-	 * @param user user that represents game player
-	 * @see User
-	 */
-	public void createScoreboard(User user) {
-		Scoreboard scoreboard = ScoreboardLib.createScoreboard(user.getPlayer()).setHandler(new ScoreboardHandler() {
+	public void createScoreboard(Player player) {
+		Scoreboard scoreboard = ScoreboardLib.createScoreboard(player).setHandler(new ScoreboardHandler() {
 
 			@Override
 			public String getTitle(Player player) {
@@ -71,7 +68,7 @@ public class ScoreboardManager {
 
 			@Override
 			public List<Entry> getEntries(Player player) {
-				return formatScoreboard(user);
+				return formatScoreboard(player);
 			}
 		});
 
@@ -79,15 +76,9 @@ public class ScoreboardManager {
 		scoreboards.add(scoreboard);
 	}
 
-	/**
-	 * Removes scoreboard of user
-	 *
-	 * @param user user that represents game player
-	 * @see User
-	 */
-	public void removeScoreboard(User user) {
+	public void removeScoreboard(Player holder) {
 		for (Scoreboard board : scoreboards) {
-			if (board.getHolder().equals(user.getPlayer())) {
+			if (board.getHolder().equals(holder)) {
 				scoreboards.remove(board);
 				board.deactivate();
 				return;
@@ -95,75 +86,54 @@ public class ScoreboardManager {
 		}
 	}
 
-	/**
-	 * Forces all scoreboards to deactivate.
-	 */
 	public void stopAllScoreboards() {
 		scoreboards.forEach(Scoreboard::deactivate);
 		scoreboards.clear();
 	}
 
-	private List<Entry> formatScoreboard(User user) {
+	private List<Entry> formatScoreboard(Player player) {
 		EntryBuilder builder = new EntryBuilder();
-		List<String> lines;
-
-		if (arena.getArenaState() == ArenaState.IN_GAME) {
-			lines = plugin.getChatManager().getStringList("Scoreboard.Content.Playing");
-		} else {
-			if (arena.getArenaState() == ArenaState.ENDING) {
-				lines = plugin.getChatManager().getStringList("Scoreboard.Content.Playing");
-			} else {
-				lines = plugin.getChatManager().getStringList("Scoreboard.Content." + arena.getArenaState().getFormattedName());
-			}
-		}
+		ArenaState state = arena.getArenaState();
+		List<String> lines = plugin.getChatManager().getStringList(state == ArenaState.IN_GAME || state == ArenaState.ENDING ? "Scoreboard.Content.Playing" : "Scoreboard.Content." + state.getFormattedName());
 
 		for (String line : lines) {
-			builder.next(formatScoreboardLine(line, user));
+			builder.next(formatScoreboardLine(line, player));
 		}
 
 		return builder.build();
 	}
 
-	private String formatScoreboardLine(String line, User user) {
-		String formattedLine = line;
+	private String formatScoreboardLine(String line, Player player) {
+		String formattedLine = line, opponentName = getOpponent(player);
+		int timer = arena.getTimer();
 
-		formattedLine = StringUtils.replace(formattedLine, "%time%", String.valueOf(arena.getTimer()));
-		formattedLine = StringUtils.replace(formattedLine, "%duration%", StringFormatUtils.formatIntoMMSS(plugin.getConfig().getInt("Classic-Gameplay-Time", 900) - arena.getTimer()));
-		formattedLine = StringUtils.replace(formattedLine, "%formatted_time%", StringFormatUtils.formatIntoMMSS(arena.getTimer()));
+		formattedLine = StringUtils.replace(formattedLine, "%time%", Integer.toString(timer));
+		formattedLine = StringUtils.replace(formattedLine, "%duration%", StringFormatUtils.formatIntoMMSS(gameplayTime - timer));
+		formattedLine = StringUtils.replace(formattedLine, "%formatted_time%", StringFormatUtils.formatIntoMMSS(timer));
 		formattedLine = StringUtils.replace(formattedLine, "%mapname%", arena.getMapName());
-		formattedLine = StringUtils.replace(formattedLine, "%players%", String.valueOf(arena.getPlayers().size()));
-		formattedLine = StringUtils.replace(formattedLine, "%player_health%", String.valueOf((int) user.getPlayer().getHealth()));
-		formattedLine = StringUtils.replace(formattedLine, "%opponent%", getOpponent(user));
-		formattedLine = StringUtils.replace(formattedLine, "%opponent_health%", String.valueOf(Bukkit.getPlayerExact(getOpponent(user)) != null ? (int) Bukkit.getPlayerExact(getOpponent(user)).getHealth() : 0));
-		formattedLine = StringUtils.replace(formattedLine, "%win_streak%", String.valueOf(user.getStat(StatsStorage.StatisticType.WIN_STREAK)));
+		formattedLine = StringUtils.replace(formattedLine, "%players%", Integer.toString(arena.getPlayers().size()));
+		formattedLine = StringUtils.replace(formattedLine, "%player_health%", Double.toString((int) player.getHealth()));
+		formattedLine = StringUtils.replace(formattedLine, "%opponent%", opponentName);
+		formattedLine = StringUtils.replace(formattedLine, "%win_streak%", Integer.toString(StatsStorage.getUserStats(player, StatsStorage.StatisticType.WIN_STREAK)));
 
-		Player player = Bukkit.getPlayer(getOpponent(user));
+		Player opponent = Bukkit.getPlayer(getOpponent(player));
 
-		if (player != null) {
-			formattedLine = StringUtils.replace(formattedLine, "%opponent_direction%", Utils.getCardinalDirection(player));
+		if (opponent != null) {
+			formattedLine = StringUtils.replace(formattedLine, "%opponent_health%", Double.toString(opponent.getHealth()));
+			formattedLine = StringUtils.replace(formattedLine, "%opponent_direction%", Utils.getCardinalDirection(opponent));
 		}
 
 		if (plugin.getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-			formattedLine = PlaceholderAPI.setPlaceholders(user.getPlayer(), formattedLine);
+			formattedLine = PlaceholderAPI.setPlaceholders(player, formattedLine);
 		}
 
 		return formattedLine;
 	}
 
-	public String getOpponent(User user) {
-		Arena arena = user.getArena();
-		Player[] players = arena.getPlayersLeft().toArray(new Player[0]);
+	public String getOpponent(Player player) {
+		List<Player> playersLeft = arena.getPlayersLeft();
+		playersLeft.remove(player);
 
-		if (arena.getPlayersLeft().size() < 2) {
-			return "";
-		}
-
-		if (players[0].equals(user.getPlayer())) {
-			return players[1] != null ? players[1].getName() : "";
-		} else if (players[1].equals(user.getPlayer())) {
-			return players[0] != null ? players[0].getName() : "";
-		}
-
-		return "";
+		return playersLeft.isEmpty() ? "" : playersLeft.get(0).getName();
 	}
 }

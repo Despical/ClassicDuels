@@ -25,9 +25,9 @@ import me.despical.classicduels.arena.*;
 import me.despical.classicduels.handlers.items.SpecialItemManager;
 import me.despical.classicduels.handlers.rewards.Reward;
 import me.despical.classicduels.user.User;
-import me.despical.commonsbox.compat.XMaterial;
-import me.despical.commonsbox.item.ItemBuilder;
-import me.despical.commonsbox.item.ItemUtils;
+import me.despical.commons.compat.XMaterial;
+import me.despical.commons.item.ItemBuilder;
+import me.despical.commons.item.ItemUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
@@ -49,7 +49,6 @@ import java.util.stream.Stream;
 
 /**
  * @author Despical
- * @since 1.0.0
  * <p>
  * Created at 11.10.2020
  */
@@ -239,7 +238,7 @@ public class Events implements Listener {
 			return;
 		}
 
-		Player killer = victim.getLastDamageCause().getCause() != EntityDamageEvent.DamageCause.FIRE ? victim.getKiller() : Bukkit.getPlayer(arena.getScoreboardManager().getOpponent(plugin.getUserManager().getUser(victim)));
+		Player killer = victim.getLastDamageCause().getCause() != EntityDamageEvent.DamageCause.FIRE ? victim.getKiller() : Bukkit.getPlayer(arena.getScoreboardManager().getOpponent(victim));
 
 		event.setDeathMessage("");
 		event.getDrops().clear();

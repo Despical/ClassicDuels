@@ -5,9 +5,9 @@ import me.despical.classicduels.Main;
 import me.despical.classicduels.arena.Arena;
 import me.despical.classicduels.arena.ArenaManager;
 import me.despical.classicduels.arena.ArenaRegistry;
+import me.despical.classicduels.arena.ArenaState;
 import me.despical.classicduels.handlers.ChatManager;
 import me.despical.classicduels.handlers.setup.SetupInventory;
-import me.despical.classicduels.utils.Debugger;
 import me.despical.commandframework.Command;
 import me.despical.commandframework.CommandArguments;
 import me.despical.commons.configuration.ConfigUtils;
@@ -15,11 +15,17 @@ import me.despical.commons.miscellaneous.MiscUtils;
 import me.despical.commons.serializer.InventorySerializer;
 import me.despical.commons.serializer.LocationSerializer;
 import me.despical.commons.util.LogUtils;
-import org.bukkit.Bukkit;
+import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Despical
@@ -187,7 +193,80 @@ public class AdminCommands {
 
 		ArenaRegistry.registerArenas();
 
-		arguments.sendMessage(chatManager.getPrefix() + chatManager.colorMessage("Commands.Admin-Commands.Success-Reload"));
+		arguments.sendMessage(chatManager.prefixedMessage("Commands.Admin-Commands.Success-Reload"));
 		LogUtils.log("Finished reloading took {0} ms", System.currentTimeMillis() - start);
+	}
+
+	@Command(
+		name = "cd.stop",
+		permission = "cd.admin.stop",
+		usage = "/cd stop",
+		desc = "Stop the arena you're in",
+		min = 1,
+		senderType = Command.SenderType.PLAYER
+	)
+	public void stopCommand(CommandArguments arguments) {
+		Player player = arguments.getSender();
+		Arena arena = ArenaRegistry.getArena(player);
+
+		if (arena.getArenaState() != ArenaState.ENDING) {
+			ArenaManager.stopGame(true, arena);
+		}
+	}
+
+	@Command(
+		name = "cd.help",
+		permission = "cd.admin",
+		usage = "/cd help"
+	)
+	public void helpCommand(CommandArguments arguments) {
+		arguments.sendMessage("");
+		arguments.sendMessage(plugin.getChatManager().colorRawMessage("&3&l---- Classic Duels Admin Commands ----"));
+		arguments.sendMessage("");
+
+		Player player = arguments.getSender();
+
+		for (Command command : plugin.getCommandFramework().getCommands()) {
+			String usage = command.usage();
+
+			if (arguments.isSenderPlayer()) {
+				player.spigot().sendMessage(new ComponentBuilder(usage)
+					.color(ChatColor.AQUA)
+					.event(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, usage))
+					.event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(usage)))
+					.create());
+			} else {
+				arguments.sendMessage(ChatColor.AQUA + usage);
+			}
+		}
+
+		if (arguments.isArgumentsEmpty()) {
+			player.sendMessage("");
+			player.spigot().sendMessage(new ComponentBuilder("TIP:").color(ChatColor.YELLOW).bold(true)
+				.append(" Try to ", ComponentBuilder.FormatRetention.NONE).color(ChatColor.GRAY)
+				.append("hover").color(ChatColor.WHITE).underlined(true)
+				.event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.LIGHT_PURPLE + "Hover on the commands to get info about them.")))
+				.append(" or ", ComponentBuilder.FormatRetention.NONE).color(ChatColor.GRAY)
+				.append("click").color(ChatColor.WHITE).underlined(true)
+				.event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(ChatColor.LIGHT_PURPLE + "Click on the commands to insert them in the chat.")))
+				.append(" on the commands!", ComponentBuilder.FormatRetention.NONE).color(ChatColor.GRAY)
+				.create());
+		}
+	}
+
+	@Command(
+		name = "cd.list",
+		permission = "cd.admin.list",
+		usage = "/cd list",
+		desc = "Show all of the existing arenas"
+	)
+	public void listCommand(CommandArguments arguments) {
+		if (ArenaRegistry.getArenas().isEmpty()) {
+			arguments.sendMessage(chatManager.prefixedMessage("Commands.Admin-Commands.List-Command.No-Arenas-Created"));
+			return;
+		}
+
+		String arenas = ArenaRegistry.getArenas().stream().map(Arena::getId).collect(Collectors.joining(" "));
+		arguments.sendMessage(chatManager.prefixedMessage("Commands.Admin-Commands.List-Command.Format").replace("%list%", arenas));
 	}
 }

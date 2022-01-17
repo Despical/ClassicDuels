@@ -29,11 +29,11 @@ import me.despical.classicduels.handlers.rewards.Reward;
 import me.despical.classicduels.kits.KitRegistry;
 import me.despical.classicduels.user.User;
 import me.despical.classicduels.utils.Debugger;
-import me.despical.commonsbox.configuration.ConfigUtils;
-import me.despical.commonsbox.miscellaneous.AttributeUtils;
-import me.despical.commonsbox.miscellaneous.MiscUtils;
-import me.despical.commonsbox.serializer.InventorySerializer;
-import me.despical.commonsbox.serializer.LocationSerializer;
+import me.despical.commons.configuration.ConfigUtils;
+import me.despical.commons.miscellaneous.AttributeUtils;
+import me.despical.commons.miscellaneous.MiscUtils;
+import me.despical.commons.serializer.InventorySerializer;
+import me.despical.commons.serializer.LocationSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -57,7 +57,6 @@ import java.util.stream.Collectors;
 
 /**
  * @author Despical
- * @since 1.0.0
  * <p>
  * Created at 11.10.2020
  */
@@ -88,7 +87,7 @@ public class Arena extends BukkitRunnable {
 			gameBar = Bukkit.createBossBar(plugin.getChatManager().colorMessage("Bossbar.Main-Title"), BarColor.BLUE, BarStyle.SOLID);
 		}
 
-		scoreboardManager = new ScoreboardManager(this);
+		scoreboardManager = new ScoreboardManager(plugin, this);
 	}
 
 	public boolean isReady() {
@@ -203,7 +202,7 @@ public class Arena extends BukkitRunnable {
 						plugin.getUserManager().getUser(player).addStat(StatsStorage.StatisticType.GAMES_PLAYED, 1);
 
 						for (String msg : plugin.getChatManager().getStringList("In-Game.Messages.Lobby-Messages.Game-Started")) {
-							MiscUtils.sendCenteredMessage(player, plugin.getChatManager().colorRawMessage(msg).replace("%opponent%", scoreboardManager.getOpponent(plugin.getUserManager().getUser(player))));
+							MiscUtils.sendCenteredMessage(player, plugin.getChatManager().colorRawMessage(msg).replace("%opponent%", scoreboardManager.getOpponent(player)));
 						}
 
 						player.updateInventory();
@@ -236,7 +235,7 @@ public class Arena extends BukkitRunnable {
 				}
 
 				for (Player player : players) {
-					Player opponent = Bukkit.getPlayer(scoreboardManager.getOpponent(plugin.getUserManager().getUser(player)));
+					Player opponent = Bukkit.getPlayer(scoreboardManager.getOpponent(player));
 
 					if (opponent != null) {
 						player.setCompassTarget(opponent.getLocation());
@@ -518,7 +517,7 @@ public class Arena extends BukkitRunnable {
 	private void clearArea() {
 		String s = "instances." + id + ".";
 		FileConfiguration config = ConfigUtils.getConfig(plugin, "arenas");
-		Location minArea = LocationSerializer.locationFromString(config.getString(s + "areaMin")), maxArea = LocationSerializer.locationFromString(config.getString(s + "areaMax"));
+		Location minArea = LocationSerializer.fromString(config.getString(s + "areaMin")), maxArea = LocationSerializer.fromString(config.getString(s + "areaMax"));
 
 		if (minArea == null || maxArea == null) {
 			return;

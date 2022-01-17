@@ -31,11 +31,11 @@ import me.despical.classicduels.handlers.items.SpecialItemManager;
 import me.despical.classicduels.handlers.rewards.Reward;
 import me.despical.classicduels.user.User;
 import me.despical.classicduels.utils.Debugger;
-import me.despical.commonsbox.compat.Titles;
-import me.despical.commonsbox.miscellaneous.AttributeUtils;
-import me.despical.commonsbox.miscellaneous.MiscUtils;
-import me.despical.commonsbox.serializer.InventorySerializer;
-import me.despical.commonsbox.string.StringFormatUtils;
+import me.despical.commons.compat.Titles;
+import me.despical.commons.miscellaneous.AttributeUtils;
+import me.despical.commons.miscellaneous.MiscUtils;
+import me.despical.commons.serializer.InventorySerializer;
+import me.despical.commons.string.StringFormatUtils;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -51,7 +51,6 @@ import java.util.stream.IntStream;
 
 /**
  * @author Despical
- * @since 1.0.0
  * <p>
  * Created at 12.10.2018
  */
@@ -106,7 +105,7 @@ public class ArenaManager {
 		Debugger.debug("[{0}] Checked join attempt for {1} initialized", arena.getId(), player.getName());
 		User user = plugin.getUserManager().getUser(player);
 
-		arena.getScoreboardManager().createScoreboard(user);
+		arena.getScoreboardManager().createScoreboard(player);
 
 		if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.INVENTORY_MANAGER_ENABLED)) {
 			InventorySerializer.saveInventoryToFile(plugin, player);
@@ -189,7 +188,7 @@ public class ArenaManager {
 		Bukkit.getPluginManager().callEvent(event);
 		User user = plugin.getUserManager().getUser(player);
 
-		arena.getScoreboardManager().removeScoreboard(user);
+		arena.getScoreboardManager().removeScoreboard(player);
 
 		if (arena.getArenaState() == ArenaState.IN_GAME && !user.isSpectator()) {
 			if (arena.getPlayersLeft().size() - 1 == 1) {
@@ -273,18 +272,18 @@ public class ArenaManager {
 				user.addStat(StatsStorage.StatisticType.WINS, 1);
 				user.addStat(StatsStorage.StatisticType.WIN_STREAK, 1);
 
-				Titles.sendTitle(player, 5, 40, 5, plugin.getChatManager().colorMessage("In-Game.Messages.Game-End-Messages.Titles.Win"), plugin.getChatManager().colorMessage("In-Game.Messages.Game-End-Messages.Subtitles.Win").replace("%player%", getWinner(arena).getName()));
+				Titles.sendTitle(player, plugin.getChatManager().colorMessage("In-Game.Messages.Game-End-Messages.Titles.Win"), plugin.getChatManager().colorMessage("In-Game.Messages.Game-End-Messages.Subtitles.Win").replace("%player%", getWinner(arena).getName()), 5, 40, 5);
 
 				plugin.getRewardsFactory().performReward(player, Reward.RewardType.WIN);
 			} else if (user.getStat(StatsStorage.StatisticType.LOCAL_WON) == -1) {
 				user.addStat(StatsStorage.StatisticType.LOSES, 1);
 				user.setStat(StatsStorage.StatisticType.WIN_STREAK, 0);
 
-				Titles.sendTitle(player, 5, 40, 5, plugin.getChatManager().colorMessage("In-Game.Messages.Game-End-Messages.Titles.Lose"), plugin.getChatManager().colorMessage("In-Game.Messages.Game-End-Messages.Subtitles.Lose").replace("%player%", getWinner(arena).getName()));
+				Titles.sendTitle(player, plugin.getChatManager().colorMessage("In-Game.Messages.Game-End-Messages.Titles.Lose"), plugin.getChatManager().colorMessage("In-Game.Messages.Game-End-Messages.Subtitles.Lose").replace("%player%", getWinner(arena).getName()), 5, 40, 5);
 
 				plugin.getRewardsFactory().performReward(player, Reward.RewardType.LOSE);
 			} else if (user.isSpectator()) {
-				Titles.sendTitle(player, 5, 40, 5, plugin.getChatManager().colorMessage("In-Game.Messages.Game-End-Messages.Titles.Lose"), plugin.getChatManager().colorMessage("In-Game.Messages.Game-End-Messages.Subtitles.Lose").replace("%player%", getWinner(arena).getName()));
+				Titles.sendTitle(player, plugin.getChatManager().colorMessage("In-Game.Messages.Game-End-Messages.Titles.Lose"), plugin.getChatManager().colorMessage("In-Game.Messages.Game-End-Messages.Subtitles.Lose").replace("%player%", getWinner(arena).getName()), 5, 40, 5);
 			}
 
 			player.getInventory().clear();
