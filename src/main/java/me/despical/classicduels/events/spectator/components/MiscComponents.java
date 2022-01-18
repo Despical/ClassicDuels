@@ -22,7 +22,7 @@ import me.despical.classicduels.Main;
 import me.despical.classicduels.arena.Arena;
 import me.despical.classicduels.arena.ArenaRegistry;
 import me.despical.classicduels.events.spectator.SpectatorSettingsMenu;
-import me.despical.commonsbox.item.ItemBuilder;
+import me.despical.commons.item.ItemBuilder;
 import me.despical.inventoryframework.GuiItem;
 import me.despical.inventoryframework.pane.StaticPane;
 import org.bukkit.Material;
@@ -33,7 +33,6 @@ import org.bukkit.potion.PotionEffectType;
 
 /**
  * @author Despical
- * @since 1.0.0
  * <p>
  * Created at 27.10.2020
  */

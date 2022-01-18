@@ -22,7 +22,7 @@ import me.despical.classicduels.ConfigPreferences;
 import me.despical.classicduels.Main;
 import me.despical.classicduels.arena.ArenaRegistry;
 import me.despical.classicduels.utils.UpdateChecker;
-import me.despical.commonsbox.serializer.InventorySerializer;
+import me.despical.commons.serializer.InventorySerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -31,7 +31,6 @@ import org.bukkit.event.player.PlayerJoinEvent;
 
 /**
  * @author Despical
- * @since 1.0.0
  * <p>
  * Created at 11.10.2020
  */
@@ -47,45 +46,49 @@ public class JoinEvent implements Listener {
 
 	@EventHandler
 	public void onJoin(PlayerJoinEvent event) {
-		plugin.getUserManager().loadStatistics(plugin.getUserManager().getUser(event.getPlayer()));
+		Player player = event.getPlayer();
+
+		plugin.getUserManager().loadStatistics(plugin.getUserManager().getUser(player));
 
 		if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BUNGEE_ENABLED)) {
-			ArenaRegistry.getArenas().get(ArenaRegistry.getBungeeArena()).teleportToLobby(event.getPlayer());
+			ArenaRegistry.getArenas().get(ArenaRegistry.getBungeeArena()).teleportToLobby(player);
 			return;
 		}
 
-		for (Player player : plugin.getServer().getOnlinePlayers()) {
-			if (!ArenaRegistry.isInArena(player)) {
+		for (Player p : plugin.getServer().getOnlinePlayers()) {
+			if (!ArenaRegistry.isInArena(p)) {
 				continue;
 			}
 
-			player.hidePlayer(plugin, event.getPlayer());
-			event.getPlayer().hidePlayer(plugin, player);
+			p.hidePlayer(plugin, player);
+			player.hidePlayer(plugin, p);
 		}
 
 		if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.INVENTORY_MANAGER_ENABLED)) {
-			InventorySerializer.loadInventory(plugin, event.getPlayer());
+			InventorySerializer.loadInventory(plugin, player);
 		}
 	}
 
 	@EventHandler
-	public void onJoinCheckVersion(final PlayerJoinEvent event) {
-		if (!plugin.getConfig().getBoolean("Update-Notifier.Enabled", true) || !event.getPlayer().hasPermission("oitc.updatenotify")) {
+	public void onJoinCheckVersion(PlayerJoinEvent event) {
+		Player player = event.getPlayer();
+
+		if (!plugin.getConfig().getBoolean("Update-Notifier.Enabled", true) || !player.hasPermission("oitc.updatenotify")) {
 			return;
 		}
 
-		Bukkit.getScheduler().runTaskLater(plugin, () -> UpdateChecker.init(plugin, 85356).requestUpdateCheck().whenComplete((result, exception) -> {
+		plugin.getServer().getScheduler().runTaskLater(plugin, () -> UpdateChecker.init(plugin, 85356).requestUpdateCheck().whenComplete((result, exception) -> {
 			if (!result.requiresUpdate()) {
 				return;
 			}
 
 			if (result.getNewestVersion().contains("b")) {
-				event.getPlayer().sendMessage(plugin.getChatManager().colorRawMessage("&3[ClassicDuels] &bFound a beta update: v" + result.getNewestVersion() + " Download:"));
+				player.sendMessage(plugin.getChatManager().colorRawMessage("&3[ClassicDuels] &bFound a beta update: v" + result.getNewestVersion() + " Download:"));
 			} else {
-				event.getPlayer().sendMessage(plugin.getChatManager().colorRawMessage("&3[ClassicDuels] &bFound an update: v" + result.getNewestVersion() + " Download:"));
+				player.sendMessage(plugin.getChatManager().colorRawMessage("&3[ClassicDuels] &bFound an update: v" + result.getNewestVersion() + " Download:"));
 			}
 
-			event.getPlayer().sendMessage(plugin.getChatManager().colorRawMessage("&3>> &bhttps://www.spigotmc.org/resources/classic-duels-1-9-1-16-4.85356/"));
+			player.sendMessage(plugin.getChatManager().colorRawMessage("&3>> &bhttps://www.spigotmc.org/resources/classic-duels.85356/"));
 		}), 25);
 	}
 }

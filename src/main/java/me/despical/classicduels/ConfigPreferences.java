@@ -23,47 +23,39 @@ import java.util.Map;
 
 /**
  * @author Despical
- * @since 1.0.0
  * <p>
  * Created at 11.10.2020
  */
 public class ConfigPreferences {
 
-	private final Main plugin;
-	private final Map<Option, Boolean> options = new HashMap<>();
+	private final Map<Option, Boolean> options;
 
 	public ConfigPreferences(Main plugin) {
-		this.plugin = plugin;
+		this.options = new HashMap<>();
 
-		loadOptions();
-	}
-
-	/**
-	 * Returns whether option value is true or false
-	 *
-	 * @param option option to get value from
-	 * @return true or false based on user configuration
-	 */
-	public boolean getOption(Option option) {
-		return options.get(option);
-	}
-
-	private void loadOptions() {
 		for (Option option : Option.values()) {
 			options.put(option, plugin.getConfig().getBoolean(option.getPath(), option.getDefault()));
 		}
 	}
 
+	public boolean getOption(Option option) {
+		return options.get(option);
+	}
+
 	public enum Option {
-		BOSSBAR_ENABLED("Bossbar-Enabled", true), BUNGEE_ENABLED("BungeeActivated", false),
-		CHAT_FORMAT_ENABLED("ChatFormat-Enabled", true), DATABASE_ENABLED("DatabaseActivated", false),
-		DISABLE_FALL_DAMAGE("Disable-Fall-Damage", false), DISABLE_LEVEL_COUNTDOWN("Disable-Level-Countdown", false),
-		DISABLE_SEPARATE_CHAT("Disable-Separate-Chat", false), ENABLE_SHORT_COMMANDS("Enable-Short-Commands", false),
+		BOSSBAR_ENABLED("Bossbar-Enabled", true), BUNGEE_ENABLED("BungeeActivated"),
+		CHAT_FORMAT_ENABLED("ChatFormat-Enabled", true), DATABASE_ENABLED("DatabaseActivated"),
+		DISABLE_FALL_DAMAGE("Disable-Fall-Damage"), DISABLE_LEVEL_COUNTDOWN("Disable-Level-Countdown"),
+		DISABLE_SEPARATE_CHAT("Disable-Separate-Chat"), ENABLE_SHORT_COMMANDS("Enable-Short-Commands"),
 		INVENTORY_MANAGER_ENABLED("InventoryManager", true), PICKUP_ARROWS("Pickup-Arrows", true),
-		NAMETAGS_HIDDEN("Nametags-Hidden", false);
+		NAMETAGS_HIDDEN("Nametags-Hidden");
 
 		private final String path;
 		private final boolean def;
+
+		Option(String path) {
+			this(path, false);
+		}
 
 		Option(String path, boolean def) {
 			this.path = path;
@@ -74,9 +66,6 @@ public class ConfigPreferences {
 			return path;
 		}
 
-		/**
-		 * @return default value of option if absent in config
-		 */
 		public boolean getDefault() {
 			return def;
 		}

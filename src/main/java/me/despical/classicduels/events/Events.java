@@ -28,12 +28,10 @@ import me.despical.classicduels.user.User;
 import me.despical.commons.compat.XMaterial;
 import me.despical.commons.item.ItemBuilder;
 import me.despical.commons.item.ItemUtils;
-import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -44,6 +42,7 @@ import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -62,14 +61,14 @@ public class Events implements Listener {
 		plugin.getServer().getPluginManager().registerEvents(this, plugin);
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onDrop(PlayerDropItemEvent event) {
 		if (ArenaRegistry.isInArena(event.getPlayer())) {
 			event.setCancelled(true);
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onCommandExecute(PlayerCommandPreprocessEvent event) {
 		if (!ArenaRegistry.isInArena(event.getPlayer())) {
 			return;
@@ -85,11 +84,15 @@ public class Events implements Listener {
 			}
 		}
 
-		if (event.getPlayer().isOp() || event.getPlayer().hasPermission("cd.admin") || event.getPlayer().hasPermission("cd.command.bypass")) {
+		Player player = event.getPlayer();
+
+		if (player.isOp() || player.hasPermission("cd.admin") || player.hasPermission("cd.command.bypass")) {
 			return;
 		}
 
-		if (event.getMessage().startsWith("/cd") || event.getMessage().startsWith("/classicduels") || event.getMessage().contains("leave") || event.getMessage().contains("stats")) {
+		String message = event.getMessage();
+
+		if (message.startsWith("/cd") || message.startsWith("/classicduels") || message.contains("leave") || message.contains("stats")) {
 			return;
 		}
 
@@ -97,7 +100,7 @@ public class Events implements Listener {
 		event.getPlayer().sendMessage(plugin.getChatManager().colorMessage("In-Game.Only-Command-Ingame-Is-Leave"));
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onInGameInteract(PlayerInteractEvent event) {
 		if (!ArenaRegistry.isInArena(event.getPlayer()) || event.getClickedBlock() == null) {
 			return;
@@ -108,36 +111,34 @@ public class Events implements Listener {
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onInGameBedEnter(PlayerBedEnterEvent event) {
-		if (!ArenaRegistry.isInArena(event.getPlayer())) {
-			return;
+		if (ArenaRegistry.isInArena(event.getPlayer())) {
+			event.setCancelled(true);
 		}
-
-		event.setCancelled(true);
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onShoot(EntityShootBowEvent event) {
 		if (!(event.getEntity() instanceof Player && event.getProjectile() instanceof Arrow)) {
 			return;
 		}
 
 		Player player = (Player) event.getEntity();
+		Arena arena = ArenaRegistry.getArena(player);
 
-		if (!ArenaRegistry.isInArena(player)) {
+		if (arena == null) {
 			return;
 		}
 
-		if (ArenaRegistry.getArena(player).getArenaState() != ArenaState.IN_GAME) {
+		if (arena.getArenaState() != ArenaState.IN_GAME) {
 			return;
 		}
 
-		User user = plugin.getUserManager().getUser(player);
-		user.addStat(StatsStorage.StatisticType.LOCAL_SHOOTED_ARROWS, 1);
+		plugin.getUserManager().getUser(player).addStat(StatsStorage.StatisticType.LOCAL_SHOOTED_ARROWS, 1);
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onDamageWithBow(EntityDamageByEntityEvent event) {
 		if (!(event.getDamager() instanceof Arrow && event.getEntity() instanceof Player)) {
 			return;
@@ -149,24 +150,27 @@ public class Events implements Listener {
 			return;
 		}
 
-		if (!ArenaUtils.areInSameArena((Player) event.getEntity(), (Player) arrow.getShooter())) {
+		Player player = (Player) event.getEntity(), shooter = (Player) arrow.getShooter();
+
+		if (!ArenaUtils.areInSameArena(player, shooter)) {
 			return;
 		}
 
-		if (ArenaRegistry.getArena((Player) arrow.getShooter()).getArenaState() != ArenaState.IN_GAME) {
+		if (ArenaRegistry.getArena(shooter).getArenaState() != ArenaState.IN_GAME) {
 			return;
 		}
 
-		User user = plugin.getUserManager().getUser((Player) arrow.getShooter());
+		User user = plugin.getUserManager().getUser(shooter);
 		user.addStat(StatsStorage.StatisticType.LOCAL_ACCURATE_ARROWS, 1);
 		user.addStat(StatsStorage.StatisticType.LOCAL_DAMAGE_DEALT, (int) event.getDamage());
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onHitMiss(PlayerInteractEvent event) {
 		Player player = event.getPlayer();
+		Arena arena = ArenaRegistry.getArena(player);
 
-		if (!ArenaRegistry.isInArena(player)) {
+		if (arena == null) {
 			return;
 		}
 
@@ -174,48 +178,50 @@ public class Events implements Listener {
 			return;
 		}
 
-		if (!isInRange(ArenaRegistry.getArena(player))) {
+		if (!isInRange(arena)) {
 			return;
 		}
 
-		User user = plugin.getUserManager().getUser(player);
-		user.addStat(StatsStorage.StatisticType.LOCAL_MISSED_HITS, 1);
+		plugin.getUserManager().getUser(player).addStat(StatsStorage.StatisticType.LOCAL_MISSED_HITS, 1);
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onDamage(EntityDamageByEntityEvent event) {
 		if (!(event.getDamager() instanceof Player && event.getEntity() instanceof Player)) {
 			return;
 		}
 
-		if (!ArenaUtils.areInSameArena((Player) event.getDamager(), (Player) event.getEntity())) {
+		Player player = (Player) event.getEntity(), damager = (Player) event.getDamager();
+
+		if (!ArenaUtils.areInSameArena(player, damager)) {
 			return;
 		}
 
-		if (ArenaRegistry.getArena((Player) event.getDamager()).getArenaState() != ArenaState.IN_GAME) {
+		if (ArenaRegistry.getArena(damager).getArenaState() != ArenaState.IN_GAME) {
 			return;
 		}
 
 		if (event.getCause() != EntityDamageEvent.DamageCause.PROJECTILE) {
-			User user = plugin.getUserManager().getUser((Player) event.getDamager());
+			User user = plugin.getUserManager().getUser(damager);
 			user.addStat(StatsStorage.StatisticType.LOCAL_ACCURATE_HITS, 1);
 			user.addStat(StatsStorage.StatisticType.LOCAL_DAMAGE_DEALT, (int) event.getDamage());
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onRegen(EntityRegainHealthEvent event) {
 		if (!(event.getEntity() instanceof Player)) {
 			return;
 		}
 
 		Player player = (Player) event.getEntity();
+		Arena arena = ArenaRegistry.getArena(player);
 
-		if (!ArenaRegistry.isInArena(player)){
+		if (arena == null){
 			return;
 		}
 
-		if (ArenaRegistry.getArena(player).getArenaState() != ArenaState.IN_GAME) {
+		if (arena.getArenaState() != ArenaState.IN_GAME) {
 			return;
 		}
 
@@ -223,52 +229,54 @@ public class Events implements Listener {
 	}
 
 	private boolean isInRange(Arena arena) {
-		if (arena.getPlayersLeft().size() < 2) return false;
+		List<Player> players = arena.getPlayersLeft();
 
-		Player[] players = arena.getPlayersLeft().toArray(new Player[0]);
-		return players[0].getLocation().distance(players[1].getLocation()) < 5D;
+		return players.size() == 2 && players.get(0).getLocation().distance(players.get(1).getLocation()) < 5D;
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onDeath(PlayerDeathEvent event) {
 		Player victim = event.getEntity();
-		Arena arena = ArenaRegistry.getArena(event.getEntity());
+		Arena arena = ArenaRegistry.getArena(victim);
 
 		if (arena == null) {
 			return;
 		}
 
-		Player killer = victim.getLastDamageCause().getCause() != EntityDamageEvent.DamageCause.FIRE ? victim.getKiller() : Bukkit.getPlayer(arena.getScoreboardManager().getOpponent(victim));
+		Player killer = victim.getLastDamageCause().getCause() != EntityDamageEvent.DamageCause.FIRE ? victim.getKiller() : plugin.getServer().getPlayer(arena.getScoreboardManager().getOpponent(victim));
 
 		event.setDeathMessage("");
 		event.getDrops().clear();
 		event.setDroppedExp(0);
 
-		plugin.getUserManager().getUser(victim).addStat(StatsStorage.StatisticType.DEATHS, 1);
-		plugin.getUserManager().getUser(victim).setStat(StatsStorage.StatisticType.LOCAL_WON, -1);
+		User victimUser = plugin.getUserManager().getUser(victim);
+		victimUser.addStat(StatsStorage.StatisticType.DEATHS, 1);
+		victimUser.setStat(StatsStorage.StatisticType.LOCAL_WON, -1);
 
 		if (killer != null) {
-			plugin.getUserManager().getUser(killer).addStat(StatsStorage.StatisticType.KILLS, 1);
-			plugin.getUserManager().getUser(killer).setStat(StatsStorage.StatisticType.LOCAL_WON, 1);
+			User killerUser = plugin.getUserManager().getUser(killer);
+			killerUser.addStat(StatsStorage.StatisticType.KILLS, 1);
+			killerUser.setStat(StatsStorage.StatisticType.LOCAL_WON, 1);
 			plugin.getRewardsFactory().performReward(killer, Reward.RewardType.KILL);
 		}
 
-		Bukkit.getScheduler().runTaskLater(plugin, () -> {
+		plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
 			victim.spigot().respawn();
-			ArenaManager.stopGame(false, arena);
 			plugin.getRewardsFactory().performReward(victim, Reward.RewardType.DEATH);
+			ArenaManager.stopGame(false, arena);
 		}, 5);
 	}
 
-	@EventHandler(priority = EventPriority.HIGHEST)
+	@EventHandler
 	public void onRespawn(final PlayerRespawnEvent event) {
 		Player player = event.getPlayer();
+		Arena arena = ArenaRegistry.getArena(player);
 
-		if (!ArenaRegistry.isInArena(player)) {
+		if (arena == null) {
 			return;
 		}
 
-		event.setRespawnLocation(ArenaRegistry.getArena(player).getFirstPlayerLocation());
+		event.setRespawnLocation(arena.getFirstPlayerLocation());
 
 		player.setCollidable(false);
 		player.setGameMode(GameMode.SURVIVAL);
@@ -287,8 +295,9 @@ public class Events implements Listener {
 			return;
 		}
 
-		Arena arena = ArenaRegistry.getArena(event.getPlayer());
-		ItemStack itemStack = event.getPlayer().getInventory().getItemInMainHand();
+		Player player = event.getPlayer();
+		Arena arena = ArenaRegistry.getArena(player);
+		ItemStack itemStack = player.getInventory().getItemInMainHand();
 
 		if (arena == null || !ItemUtils.isNamed(itemStack)) {
 			return;
@@ -304,14 +313,14 @@ public class Events implements Listener {
 			event.setCancelled(true);
 
 			if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BUNGEE_ENABLED)) {
-				plugin.getBungeeManager().connectToHub(event.getPlayer());
+				plugin.getBungeeManager().connectToHub(player);
 			} else {
-				ArenaManager.leaveAttempt(event.getPlayer(), arena);
+				ArenaManager.leaveAttempt(player, arena);
 			}
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onPlayAgain(PlayerInteractEvent event) {
 		if (event.getAction() == Action.PHYSICAL) {
 			return;
@@ -354,11 +363,11 @@ public class Events implements Listener {
 				}
 			}
 
-			player.sendMessage(plugin.getChatManager().getPrefix() + plugin.getChatManager().colorMessage("Commands.No-Free-Arenas"));
+			player.sendMessage(plugin.getChatManager().prefixedMessage("Commands.No-Free-Arenas"));
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onFoodLevelChange(FoodLevelChangeEvent event) {
 		if (event.getEntity().getType() == EntityType.PLAYER && ArenaRegistry.isInArena((Player) event.getEntity())) {
 			event.setFoodLevel(20);
@@ -366,14 +375,14 @@ public class Events implements Listener {
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onBlockBreakEvent(BlockBreakEvent event) {
 		if (ArenaRegistry.isInArena(event.getPlayer())) {
 			event.setCancelled(true);
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onBuild(BlockPlaceEvent event) {
 		if (!ArenaRegistry.isInArena(event.getPlayer())) {
 			return;
@@ -384,7 +393,7 @@ public class Events implements Listener {
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onHangingBreakEvent(HangingBreakByEntityEvent event) {
 		if (event.getEntity() instanceof ItemFrame || event.getEntity() instanceof Painting) {
 			if (event.getRemover() instanceof Player && ArenaRegistry.isInArena((Player) event.getRemover())) {
@@ -404,7 +413,7 @@ public class Events implements Listener {
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onArmorStandDestroy(EntityDamageByEntityEvent e) {
 		if (!(e.getEntity() instanceof LivingEntity)) {
 			return;
@@ -430,26 +439,26 @@ public class Events implements Listener {
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onInteractWithArmorStand(PlayerArmorStandManipulateEvent event) {
 		if (ArenaRegistry.isInArena(event.getPlayer())) {
 			event.setCancelled(true);
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
-	public void onPlayerCommandExecution(PlayerCommandPreprocessEvent e) {
+	@EventHandler
+	public void onPlayerCommandExecution(PlayerCommandPreprocessEvent event) {
 		if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.ENABLE_SHORT_COMMANDS)) {
-			Player player = e.getPlayer();
+			Player player = event.getPlayer();
 
-			if (e.getMessage().equalsIgnoreCase("/leave")) {
+			if (event.getMessage().equalsIgnoreCase("/leave")) {
 				player.performCommand("cd leave");
-				e.setCancelled(true);
+				event.setCancelled(true);
 			}
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onFallDamage(EntityDamageEvent e) {
 		if (!(e.getEntity() instanceof Player)) {
 			return;
@@ -470,7 +479,7 @@ public class Events implements Listener {
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onArrowPickup(PlayerPickupArrowEvent e) {
 		if (!ArenaRegistry.isInArena(e.getPlayer())) {
 			return;
@@ -486,7 +495,7 @@ public class Events implements Listener {
 		e.getPlayer().getInventory().addItem(new ItemBuilder(Material.ARROW).build());
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onPickupItem(PlayerPickupItemEvent event) {
 		if (!ArenaRegistry.isInArena(event.getPlayer())) {
 			return;

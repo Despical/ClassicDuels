@@ -69,7 +69,7 @@ public class UserManager {
 
 		Debugger.debug("Registering new user {0} ({1})", player.getUniqueId(), player.getName());
 
-		User user = new User(player);
+		User user = new User(player.getUniqueId());
 		users.add(user);
 		return user;
 	}
@@ -94,8 +94,8 @@ public class UserManager {
 		database.loadStatistics(user);
 	}
 
-	public void removeUser(User user) {
-		users.remove(user);
+	public void removeUser(Player player) {
+		users.remove(getUser(player));
 	}
 
 	public UserDatabase getDatabase() {

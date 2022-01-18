@@ -22,7 +22,7 @@ import me.despical.classicduels.Main;
 import me.despical.classicduels.arena.Arena;
 import me.despical.classicduels.arena.ArenaRegistry;
 import me.despical.classicduels.arena.ArenaState;
-import me.despical.commonsbox.miscellaneous.AttributeUtils;
+import me.despical.commons.miscellaneous.AttributeUtils;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -31,7 +31,6 @@ import org.bukkit.event.entity.EntityDamageEvent;
 
 /**
  * @author Despical
- * @since 1.0.0
  * <p>
  * Created at 12.10.2020
  */

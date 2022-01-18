@@ -20,15 +20,13 @@ package me.despical.classicduels.events;
 
 import me.despical.classicduels.Main;
 import me.despical.classicduels.arena.ArenaRegistry;
-import me.despical.commonsbox.compat.VersionResolver;
-import org.bukkit.Bukkit;
+import me.despical.commons.compat.VersionResolver;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 
 /**
  * @author Despical
- * @since 1.0.2-hotfix-v1
  * <p>
  * Created at 11.10.2020
  */
@@ -45,12 +43,12 @@ public class CraftEvents implements Listener {
 	}
 
 	public void registerItemSwapEvent() {
-		Bukkit.getPluginManager().registerEvents(new Listener() {
+		plugin.getServer().getPluginManager().registerEvents(new Listener() {
 
 			@EventHandler
-			public void onItemSwap(PlayerSwapHandItemsEvent e) {
-				if (ArenaRegistry.isInArena(e.getPlayer())) {
-					e.setCancelled(true);
+			public void onItemSwap(PlayerSwapHandItemsEvent event) {
+				if (ArenaRegistry.isInArena(event.getPlayer())) {
+					event.setCancelled(true);
 				}
 			}
 		}, plugin);
