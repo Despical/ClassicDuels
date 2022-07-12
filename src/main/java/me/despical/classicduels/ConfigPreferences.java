@@ -18,7 +18,10 @@
 
 package me.despical.classicduels;
 
+import me.despical.commons.string.StringUtils;
+
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -33,8 +36,10 @@ public class ConfigPreferences {
 	public ConfigPreferences(Main plugin) {
 		this.options = new HashMap<>();
 
+		plugin.saveDefaultConfig();
+
 		for (Option option : Option.values()) {
-			options.put(option, plugin.getConfig().getBoolean(option.getPath(), option.getDefault()));
+			options.put(option, plugin.getConfig().getBoolean(option.path, option.def));
 		}
 	}
 
@@ -43,31 +48,24 @@ public class ConfigPreferences {
 	}
 
 	public enum Option {
-		BOSSBAR_ENABLED("Bossbar-Enabled", true), BUNGEE_ENABLED("BungeeActivated"),
-		CHAT_FORMAT_ENABLED("ChatFormat-Enabled", true), DATABASE_ENABLED("DatabaseActivated"),
-		DISABLE_FALL_DAMAGE("Disable-Fall-Damage"), DISABLE_LEVEL_COUNTDOWN("Disable-Level-Countdown"),
-		DISABLE_SEPARATE_CHAT("Disable-Separate-Chat"), ENABLE_SHORT_COMMANDS("Enable-Short-Commands"),
-		INVENTORY_MANAGER_ENABLED("InventoryManager", true), PICKUP_ARROWS("Pickup-Arrows", true),
-		NAMETAGS_HIDDEN("Nametags-Hidden");
 
-		private final String path;
-		private final boolean def;
+		BOSS_BAR_ENABLED, BUNGEE_ENABLED(false),
+		CHAT_FORMAT_ENABLED, DATABASE_ENABLED(false),
+		DISABLE_FALL_DAMAGE(false), DISABLE_LEVEL_COUNTDOWN(false),
+		DISABLE_SEPARATE_CHAT, ENABLE_SHORT_COMMANDS, IGNORE_WARNING_MESSAGES(false),
+		INVENTORY_MANAGER_ENABLED, PICKUP_ARROWS, UPDATE_NOTIFIER_ENABLED,
+		NAME_TAGS_HIDDEN;
 
-		Option(String path) {
-			this(path, false);
+		String path;
+		boolean def;
+
+		Option() {
+			this (true);
 		}
 
-		Option(String path, boolean def) {
-			this.path = path;
+		Option(boolean def) {
 			this.def = def;
-		}
-
-		public String getPath() {
-			return path;
-		}
-
-		public boolean getDefault() {
-			return def;
+			this.path = StringUtils.capitalize(name().replace('_', '-').toLowerCase(Locale.ENGLISH), '-', '.');
 		}
 	}
 }

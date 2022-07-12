@@ -19,7 +19,6 @@
 package me.despical.classicduels.arena;
 
 import me.despical.classicduels.Main;
-import me.despical.classicduels.utils.Debugger;
 import me.despical.commons.configuration.ConfigUtils;
 import me.despical.commons.serializer.LocationSerializer;
 import org.bukkit.configuration.ConfigurationSection;

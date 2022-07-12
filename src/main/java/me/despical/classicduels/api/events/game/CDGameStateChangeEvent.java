@@ -32,21 +32,25 @@ import org.jetbrains.annotations.NotNull;
  */
 public class CDGameStateChangeEvent extends ClassicDuelsEvent {
 
-	private final HandlerList HANDLERS = new HandlerList();
+	private static final HandlerList HANDLERS = new HandlerList();
+
 	private final ArenaState arenaState;
 
 	public CDGameStateChangeEvent(Arena eventArena, ArenaState arenaState) {
-		super(eventArena);
+		super (eventArena);
 		this.arenaState = arenaState;
 	}
 
-	@NotNull
+	public static HandlerList getHandlerList() {
+		return HANDLERS;
+	}
+
 	@Override
 	public HandlerList getHandlers() {
 		return HANDLERS;
 	}
 
-	public ArenaState getArenaState() {
+	public ArenaState getState() {
 		return arenaState;
 	}
 }

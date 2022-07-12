@@ -177,24 +177,7 @@ Signs:
     - "%mapname%"
     - "&5[%players%/2]"
 
-Arena-Selector:
-  Inventory-Title: "Arena selector"
-  Item:
-    Name: "&f%mapname%"
-    Lore:
-      - "&7Classic Duels &f- &e%mapname%"
-      - " "
-      - " "
-      - "  &fOnline: %playersize%/2"
-      - "  &fState: %state%"
-      - " "
-      - " "
-      - "&eClick to join this arena"
-
 Validator:
   Invalid-Arena-Configuration: "[Classic Duels] Arena %arena% has invalid configuration! Missing node: %error%"
   Instance-Started: "[Classic Duels] Arena %arena% instance successfully started!"
   No-Instances-Created: "[Classic Duels] There are no arena instances created in configuration!"
-
-# Don't edit it. But who's stopping you? It's your server!
-File-Version: 1

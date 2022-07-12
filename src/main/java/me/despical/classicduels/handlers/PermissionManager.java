@@ -19,7 +19,6 @@
 package me.despical.classicduels.handlers;
 
 import me.despical.classicduels.Main;
-import me.despical.classicduels.utils.Debugger;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**

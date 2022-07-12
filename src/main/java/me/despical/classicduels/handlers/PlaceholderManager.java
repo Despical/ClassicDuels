@@ -23,64 +23,72 @@ import me.despical.classicduels.Main;
 import me.despical.classicduels.api.StatsStorage;
 import me.despical.classicduels.arena.Arena;
 import me.despical.classicduels.arena.ArenaRegistry;
+import me.despical.classicduels.user.User;
+import me.despical.commons.string.StringFormatUtils;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 
 /**
  * @author Despical
- * @since 1.0.0
  * <p>
  * Created at 11.10.2020
  */
 public class PlaceholderManager extends PlaceholderExpansion {
 
-	private final Main plugin = JavaPlugin.getPlugin(Main.class);
+	private final Main plugin;
+
+	public PlaceholderManager(Main plugin) {
+		this.plugin = plugin;
+
+		register();
+	}
 
 	@Override
 	public boolean persist() {
 		return true;
 	}
 
+	@Override
 	public String getIdentifier() {
 		return "cd";
 	}
 
+	@Override
 	public String getAuthor() {
 		return "Despical";
 	}
 
+	@Override
 	public String getVersion() {
 		return plugin.getDescription().getVersion();
 	}
 
+	@Override
 	public String onPlaceholderRequest(Player player, String id) {
 		if (player == null) {
 			return null;
 		}
 
+		User user = plugin.getUserManager().getUser(player);
+
 		switch (id.toLowerCase()) {
 			case "kills":
-				return String.valueOf(StatsStorage.getUserStats(player, StatsStorage.StatisticType.KILLS));
+				return Integer.toString(user.getStat(StatsStorage.StatisticType.KILLS));
 			case "deaths":
-				return String.valueOf(StatsStorage.getUserStats(player, StatsStorage.StatisticType.DEATHS));
+				return Integer.toString(user.getStat(StatsStorage.StatisticType.DEATHS));
 			case "games_played":
-				return String.valueOf(StatsStorage.getUserStats(player, StatsStorage.StatisticType.GAMES_PLAYED));
+				return Integer.toString(user.getStat(StatsStorage.StatisticType.GAMES_PLAYED));
 			case "win_streak":
-				return String.valueOf(StatsStorage.getUserStats(player, StatsStorage.StatisticType.WIN_STREAK));
+				return Integer.toString(user.getStat(StatsStorage.StatisticType.WIN_STREAK));
 			case "wins":
-				return String.valueOf(StatsStorage.getUserStats(player, StatsStorage.StatisticType.WINS));
+				return Integer.toString(user.getStat(StatsStorage.StatisticType.WINS));
 			case "loses":
-				return String.valueOf(StatsStorage.getUserStats(player, StatsStorage.StatisticType.LOSES));
+				return Integer.toString(user.getStat(StatsStorage.StatisticType.LOSES));
 			default:
 				return handleArenaPlaceholderRequest(id);
 		}
 	}
 
 	private String handleArenaPlaceholderRequest(String id) {
-		if (!id.contains(":")) {
-			return null;
-		}
-
 		String[] data = id.split(":");
 		Arena arena = ArenaRegistry.getArena(data[0]);
 
@@ -90,16 +98,18 @@ public class PlaceholderManager extends PlaceholderExpansion {
 
 		switch (data[1].toLowerCase()) {
 			case "players":
-				return String.valueOf(arena.getPlayers().size());
+				return Integer.toString(arena.getPlayers().size());
 			case "players_left":
-				return String.valueOf(arena.getPlayersLeft().size());
+				return Integer.toString(arena.getPlayersLeft().size());
 			case "timer":
-				return String.valueOf(arena.getTimer());
+				return Integer.toString(arena.getTimer());
+			case "formatted_timer":
+				return StringFormatUtils.formatIntoMMSS(arena.getTimer());
 			case "state":
 				return String.valueOf(arena.getArenaState());
 			case "state_pretty":
 				return arena.getArenaState().getFormattedName();
-			case "mapname":
+			case "map_name":
 				return arena.getMapName();
 			default:
 				return null;

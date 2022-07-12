@@ -23,7 +23,6 @@ import me.despical.classicduels.arena.Arena;
 import me.despical.classicduels.arena.ArenaManager;
 import me.despical.classicduels.arena.ArenaRegistry;
 import me.despical.classicduels.arena.ArenaState;
-import me.despical.classicduels.utils.Debugger;
 import me.despical.commonsbox.compat.VersionResolver;
 import me.despical.commonsbox.compat.XMaterial;
 import me.despical.commonsbox.configuration.ConfigUtils;

@@ -18,7 +18,6 @@
 
 package me.despical.classicduels.user.data;
 
-import me.despical.classicduels.Main;
 import me.despical.classicduels.api.StatsStorage;
 import me.despical.classicduels.user.User;
 import me.despical.commons.configuration.ConfigUtils;
@@ -31,37 +30,35 @@ import org.bukkit.configuration.file.FileConfiguration;
  */
 public class FileStats implements UserDatabase {
 
-	private final Main plugin;
 	private final FileConfiguration config;
 
-	public FileStats(Main plugin) {
-		this.plugin = plugin;
+	public FileStats() {
 		this.config = ConfigUtils.getConfig(plugin, "stats");
 	}
 
 	@Override
-	public void saveStatistic(User user, StatsStorage.StatisticType stat) {
-		config.set(user.getUniqueID().toString() + "." + stat.getName(), user.getStat(stat));
+	public void saveStatistic(final User user, final StatsStorage.StatisticType stat) {
+		config.set(user.getUniqueId().toString() + "." + stat.getName(), user.getStat(stat));
 
 		ConfigUtils.saveConfig(plugin, config, "stats");
 	}
 
 	@Override
 	public void saveAllStatistic(User user) {
-		String uuid = user.getUniqueID().toString();
+		final String uuid = user.getUniqueId().toString();
 
 		for (StatsStorage.StatisticType stat : StatsStorage.StatisticType.values()) {
-			if (!stat.isPersistent()) continue;
-
-			config.set(uuid + "." + stat.getName(), user.getStat(stat));
+			if (stat.isPersistent()) {
+				config.set(uuid + "." + stat.getName(), user.getStat(stat));
+			}
 		}
 
 		ConfigUtils.saveConfig(plugin, config, "stats");
 	}
 
 	@Override
-	public void loadStatistics(User user) {
-		String uuid = user.getUniqueID().toString();
+	public void loadStatistics(final User user) {
+		final String uuid = user.getUniqueId().toString();
 
 		for (StatsStorage.StatisticType stat : StatsStorage.StatisticType.values()) {
 			user.setStat(stat, config.getInt(uuid + "." + stat.getName()));

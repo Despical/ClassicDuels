@@ -21,7 +21,6 @@ package me.despical.classicduels.handlers.rewards;
 import me.despical.classicduels.Main;
 import me.despical.classicduels.arena.Arena;
 import me.despical.classicduels.arena.ArenaRegistry;
-import me.despical.classicduels.utils.Debugger;
 import me.despical.commonsbox.configuration.ConfigUtils;
 import me.despical.commonsbox.engine.ScriptEngine;
 import org.apache.commons.lang.StringUtils;

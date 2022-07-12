@@ -31,15 +31,29 @@ import org.jetbrains.annotations.NotNull;
  */
 public class CDGameStopEvent extends ClassicDuelsEvent {
 
-	private final HandlerList HANDLERS = new HandlerList();
+	private static final HandlerList HANDLERS = new HandlerList();
+	private final StopReason stopReason;
 
-	public CDGameStopEvent(Arena arena) {
-		super(arena);
+	public CDGameStopEvent(Arena arena, StopReason stopReason) {
+		super (arena);
+		this.stopReason = stopReason;
+	}
+
+	public static HandlerList getHandlerList() {
+		return HANDLERS;
 	}
 
 	@NotNull
 	@Override
 	public HandlerList getHandlers() {
 		return HANDLERS;
+	}
+
+	public StopReason getStopReason() {
+		return stopReason;
+	}
+
+	public enum StopReason {
+		COMMAND, DEFAULT
 	}
 }

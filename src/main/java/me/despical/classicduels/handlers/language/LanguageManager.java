@@ -19,7 +19,6 @@
 package me.despical.classicduels.handlers.language;
 
 import me.despical.classicduels.Main;
-import me.despical.classicduels.utils.Debugger;
 import me.despical.commonsbox.file.FileUtils;
 
 import java.io.File;

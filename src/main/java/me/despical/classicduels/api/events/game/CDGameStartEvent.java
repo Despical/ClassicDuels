@@ -30,10 +30,14 @@ import org.jetbrains.annotations.NotNull;
  */
 public class CDGameStartEvent extends ClassicDuelsEvent {
 
-	private final HandlerList HANDLERS = new HandlerList();
+	private static final HandlerList HANDLERS = new HandlerList();
 
 	public CDGameStartEvent(Arena arena) {
-		super(arena);
+		super (arena);
+	}
+
+	public static HandlerList getHandlerList() {
+		return HANDLERS;
 	}
 
 	@NotNull

@@ -21,14 +21,11 @@ package me.despical.classicduels.api;
 import me.despical.classicduels.ConfigPreferences;
 import me.despical.classicduels.Main;
 import me.despical.classicduels.user.data.MysqlManager;
-import me.despical.classicduels.utils.Debugger;
 import me.despical.commons.configuration.ConfigUtils;
 import me.despical.commons.sorter.SortUtils;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -47,15 +44,6 @@ public class StatsStorage {
 
 	private static final Main plugin = JavaPlugin.getPlugin(Main.class);
 
-	/**
-	 * Get all UUID's sorted ascending by Statistic Type
-	 *
-	 * @param stat Statistic type to get (kills, deaths etc.)
-	 * @return Map of UUID keys and Integer values sorted in ascending order of
-	 *         requested statistic type
-	 */
-	@NotNull
-	@Contract("null -> fail")
 	public static Map<UUID, Integer> getStats(StatisticType stat) {
 		if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.DATABASE_ENABLED)) {
 			try (Connection connection = plugin.getMysqlDatabase().getConnection()) {
@@ -68,49 +56,41 @@ public class StatsStorage {
 				}
 
 				return column;
-			} catch (SQLException e) {
-				plugin.getLogger().log(Level.WARNING, "SQL Exception occurred! " + e.getSQLState() + " (" + e.getErrorCode() + ")");
-				Debugger.sendConsoleMessage("&cCannot get contents from MySQL database!");
-				Debugger.sendConsoleMessage("&cCheck configuration of mysql.yml file or disable mysql option in config.yml");
-				return Collections.emptyMap();
+			} catch (SQLException exception) {
+				plugin.getLogger().log(Level.WARNING, "SQL Exception occurred! " + exception.getSQLState() + " (" + exception.getErrorCode() + ")");
+				return null;
 			}
 		}
 
 		FileConfiguration config = ConfigUtils.getConfig(plugin, "stats");
 		Map<UUID, Integer> stats = config.getKeys(false).stream().collect(Collectors.toMap(UUID::fromString, string -> config.getInt(string + "." + stat.getName()), (a, b) -> b));
+
 		return SortUtils.sortByValue(stats);
 	}
 
-	/**
-	 * Get user statistic based on StatisticType
-	 *
-	 * @param player Online player to get data from
-	 * @param statisticType Statistic type to get (kills, deaths etc.)
-	 * @return int of statistic
-	 * @see StatisticType
-	 */
 	public static int getUserStats(Player player, StatisticType statisticType) {
 		return plugin.getUserManager().getUser(player).getStat(statisticType);
 	}
+
 
 	public enum StatisticType {
 		KILLS("kills", true), DEATHS("deaths", true), WINS("wins", true),
 		LOSES("loses", true), WIN_STREAK("winstreak", true), GAMES_PLAYED("gamesplayed", true),
 		LOCAL_DAMAGE_DEALT("local_damage_dealt"), LOCAL_HEALTH_REGEN("local_health_regen"),
 		LOCAL_ACCURATE_HITS("local_accurate_hits"), LOCAL_MISSED_HITS("local_missed_hits"),
-		LOCAL_SHOOTED_ARROWS("local_shooted_arrows"), 	LOCAL_ACCURATE_ARROWS("local_accurate_arrows"),
+		LOCAL_SHOOTED_ARROWS("local_shooted_arrows"), LOCAL_ACCURATE_ARROWS("local_accurate_arrows"),
 		LOCAL_WON("local_won");
 
-		private final String name;
-		private final boolean persistent;
+		String name;
+		boolean persistent;
+
+		StatisticType(String name) {
+			this (name, false);
+		}
 
 		StatisticType(String name, boolean persistent) {
 			this.name = name;
 			this.persistent = persistent;
-		}
-
-		StatisticType(String name) {
-			this(name, false);
 		}
 
 		public String getName() {

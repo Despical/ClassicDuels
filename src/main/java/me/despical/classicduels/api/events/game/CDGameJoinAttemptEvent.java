@@ -32,14 +32,25 @@ import org.jetbrains.annotations.NotNull;
  */
 public class CDGameJoinAttemptEvent extends ClassicDuelsEvent implements Cancellable {
 
-	private final HandlerList HANDLERS = new HandlerList();
+	private static final HandlerList HANDLERS = new HandlerList();
 	private final Player player;
+
 	private boolean isCancelled;
 
-	public CDGameJoinAttemptEvent(Player player, Arena targetArena) {
-		super(targetArena);
+	public CDGameJoinAttemptEvent(Arena targetArena, Player player) {
+		super (targetArena);
 		this.player = player;
 		this.isCancelled = false;
+	}
+
+	public static HandlerList getHandlerList() {
+		return HANDLERS;
+	}
+
+	@NotNull
+	@Override
+	public HandlerList getHandlers() {
+		return HANDLERS;
 	}
 
 	public boolean isCancelled() {
@@ -52,11 +63,5 @@ public class CDGameJoinAttemptEvent extends ClassicDuelsEvent implements Cancell
 
 	public Player getPlayer() {
 		return player;
-	}
-
-	@NotNull
-	@Override
-	public HandlerList getHandlers() {
-		return HANDLERS;
 	}
 }

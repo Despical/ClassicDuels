@@ -48,7 +48,6 @@ public class ScoreboardManager {
 	private final Main plugin;
 	private final Arena arena;
 	private final Set<Scoreboard> scoreboards;
-
 	private final int gameplayTime;
 
 	public ScoreboardManager(Main plugin, Arena arena) {

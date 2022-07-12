@@ -18,7 +18,6 @@
 
 package me.despical.classicduels.user.data;
 
-import me.despical.classicduels.Main;
 import me.despical.classicduels.api.StatsStorage;
 import me.despical.classicduels.user.User;
 import me.despical.commons.configuration.ConfigUtils;
@@ -37,19 +36,17 @@ import java.sql.Statement;
  */
 public class MysqlManager implements UserDatabase {
 
-	private final Main plugin;
 	private final MysqlDatabase database;
-	private final String table;
+	private final String tableName;
 
-	public MysqlManager(Main plugin) {
-		this.plugin = plugin;
+	public MysqlManager() {
 		this.database = plugin.getMysqlDatabase();
-		this.table = ConfigUtils.getConfig(plugin, "mysql").getString("table", "playerstats");
+		this.tableName = ConfigUtils.getConfig(plugin, "mysql").getString("table", "playerstats");
 
 		plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
 			try (Connection connection = database.getConnection()) {
 				Statement statement = connection.createStatement();
-				statement.executeUpdate("CREATE TABLE IF NOT EXISTS `" + table + "` (\n"
+				statement.executeUpdate("CREATE TABLE IF NOT EXISTS `" + tableName + "` (\n"
 					+ "  `UUID` char(36) NOT NULL PRIMARY KEY,\n"
 					+ "  `name` varchar(32) NOT NULL,\n"
 					+ "  `kills` int(11) NOT NULL DEFAULT '0',\n"
@@ -59,19 +56,17 @@ public class MysqlManager implements UserDatabase {
 					+ "  `winstreak` int(11) NOT NULL DEFAULT '0',\n"
 					+ "  `gamesplayed` int(11) NOT NULL DEFAULT '0',\n"
 					+ "  `coins` int(11) NOT NULL DEFAULT '0'\n" + ");");
-			} catch (SQLException e) {
-				e.printStackTrace();
-
-				LogUtils.sendConsoleMessage("&cCannot save contents to MySQL database!");
-				LogUtils.sendConsoleMessage("&cCheck configuration of mysql.yml file or disable mysql option in config.yml");
+			} catch (SQLException exception) {
+				exception.printStackTrace();
+				LogUtils.sendConsoleMessage("&cCouldn't save user statistics to MySQL database!");
+				LogUtils.sendConsoleMessage("&cCheck your configuration or disable MySQL option in config.yml");
 			}
 		});
 	}
-
 	@Override
 	public void saveStatistic(User user, StatsStorage.StatisticType stat) {
 		plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-			String query = "UPDATE " + table + " SET " + stat.getName() + "=" + user.getStat(stat) + " WHERE UUID='" + user.getUniqueID().toString() + "';";
+			final String query = "UPDATE " + tableName + " SET " + stat.getName() + "=" + user.getStat(stat) + " WHERE UUID='" + user.getUniqueId().toString() + "';";
 
 			database.executeUpdate(query);
 			LogUtils.log("Executed MySQL: " + query);
@@ -80,43 +75,45 @@ public class MysqlManager implements UserDatabase {
 
 	@Override
 	public void saveAllStatistic(User user) {
-		StringBuilder update = new StringBuilder(" SET ");
+		final StringBuilder builder = new StringBuilder(" SET ");
 
 		for (StatsStorage.StatisticType stat : StatsStorage.StatisticType.values()) {
 			if (!stat.isPersistent()) continue;
 
-			if (update.toString().equalsIgnoreCase(" SET ")) {
-				update.append(stat.getName()).append("=").append(user.getStat(stat));
+			final String name = stat.getName();
+			final int val = user.getStat(stat);
+
+			if (builder.toString().equalsIgnoreCase(" SET ")) {
+				builder.append(name).append("=").append(val);
 			}
 
-			update.append(", ").append(stat.getName()).append("=").append(user.getStat(stat));
+			builder.append(", ").append(name).append("=").append(val);
 		}
 
-		String finalUpdate = update.toString();
-		plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> database.executeUpdate("UPDATE " + table + finalUpdate + " WHERE UUID='" + user.getUniqueID().toString() + "';"));
+		final String update = builder.toString();
+		plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> database.executeUpdate("UPDATE " + tableName + update + " WHERE UUID='" + user.getUniqueId().toString() + "';"));
 	}
 
 	@Override
 	public void loadStatistics(User user) {
 		plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-			String uuid = user.getUniqueID().toString(), name = user.getPlayer().getName();
+			final String uuid = user.getUniqueId().toString(), playerName = user.getPlayer().getName();
 
 			try (Connection connection = database.getConnection()) {
-				Statement statement = connection.createStatement();
-				ResultSet rs = statement.executeQuery("SELECT * from " + table + " WHERE UUID='" + uuid + "';");
+				final Statement statement = connection.createStatement();
+				final ResultSet result = statement.executeQuery("SELECT * from " + tableName + " WHERE UUID='" + uuid + "';");
 
-				if (rs.next()) {
-					LogUtils.log("MySQL Stats | Player {0} already exist. Getting Stats...", name);
+				if (result.next()) {
+					LogUtils.log("MySQL Stats | Player {0} already exist. Getting Stats...", playerName);
 
 					for (StatsStorage.StatisticType stat : StatsStorage.StatisticType.values()) {
 						if (!stat.isPersistent()) continue;
 
-						int val = rs.getInt(stat.getName());
-						user.setStat(stat, val);
+						user.setStat(stat, result.getInt(stat.getName()));
 					}
 				} else {
-					LogUtils.log("MySQL Stats | Player {0} does not exist. Creating new one...", name);
-					statement.executeUpdate("INSERT INTO " + table + " (UUID,name) VALUES ('" + uuid + "','" + name + "');");
+					LogUtils.log("MySQL Stats | Player {0} does not exist. Creating new one...", playerName);
+					statement.executeUpdate("INSERT INTO " + tableName + " (UUID,name) VALUES ('" + uuid + "','" + playerName + "');");
 
 					for (StatsStorage.StatisticType stat : StatsStorage.StatisticType.values()) {
 						if (!stat.isPersistent()) continue;
@@ -124,14 +121,14 @@ public class MysqlManager implements UserDatabase {
 						user.setStat(stat, 0);
 					}
 				}
-			} catch (SQLException e) {
-				e.printStackTrace();
+			} catch (SQLException exception) {
+				exception.printStackTrace();
 			}
 		});
 	}
 
 	public String getTableName() {
-		return table;
+		return tableName;
 	}
 
 	public MysqlDatabase getDatabase() {

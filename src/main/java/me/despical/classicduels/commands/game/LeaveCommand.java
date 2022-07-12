@@ -24,7 +24,6 @@ import me.despical.classicduels.arena.ArenaManager;
 import me.despical.classicduels.arena.ArenaRegistry;
 import me.despical.classicduels.commands.SubCommand;
 import me.despical.classicduels.handlers.ChatManager;
-import me.despical.classicduels.utils.Debugger;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 

@@ -22,7 +22,6 @@ import me.despical.classicduels.api.StatsStorage;
 import me.despical.classicduels.arena.Arena;
 import me.despical.classicduels.arena.ArenaRegistry;
 import me.despical.classicduels.arena.ArenaUtils;
-import me.despical.classicduels.commands.CommandHandler;
 import me.despical.classicduels.events.*;
 import me.despical.classicduels.events.spectator.SpectatorEvents;
 import me.despical.classicduels.events.spectator.SpectatorItemEvents;
@@ -41,19 +40,20 @@ import me.despical.classicduels.user.data.MysqlManager;
 import me.despical.classicduels.utils.*;
 import me.despical.commandframework.CommandFramework;
 import me.despical.commons.compat.VersionResolver;
-import me.despical.commons.configuration.ConfigUtils;
 import me.despical.commons.database.MysqlDatabase;
+import me.despical.commons.exception.ExceptionLogHandler;
 import me.despical.commons.miscellaneous.AttributeUtils;
 import me.despical.commons.scoreboard.ScoreboardLib;
 import me.despical.commons.serializer.InventorySerializer;
+import me.despical.commons.util.Collections;
+import me.despical.commons.util.JavaVersion;
+import me.despical.commons.util.LogUtils;
+import me.despical.commons.util.UpdateChecker;
 import org.bstats.bukkit.Metrics;
-import org.bukkit.Bukkit;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
-import java.util.Arrays;
 
 /**
  * @author Despical
@@ -62,8 +62,9 @@ import java.util.Arrays;
  */
 public class Main extends JavaPlugin {
 
+	private boolean forceDisable;
+
 	private ExceptionLogHandler exceptionLogHandler;
-	private boolean forceDisable = false;
 	private BungeeManager bungeeManager;
 	private RewardsFactory rewardsFactory;
 	private MysqlDatabase database;
@@ -77,49 +78,55 @@ public class Main extends JavaPlugin {
 
 	@Override
 	public void onEnable() {
-		if (!validateIfPluginShouldStart()) {
-			forceDisable = true;
+		if (forceDisable = !validateIfPluginShouldStart()) {
 			getServer().getPluginManager().disablePlugin(this);
 			return;
 		}
 
-		exceptionLogHandler = new ExceptionLogHandler(this);
-		saveDefaultConfig();
+		if (getDescription().getVersion().contains("debug") || getConfig().getBoolean("Debug-Messages")) {
+			LogUtils.setLoggerName("CD");
+			LogUtils.enableLogging();
 
-		Debugger.setEnabled(getDescription().getVersion().contains("debug") || getConfig().getBoolean("Debug-Messages"));
-		Debugger.debug("Initialization start");
-
-		if (getConfig().getBoolean("Developer-Mode")) {
-			Debugger.deepDebug(true);
-			Debugger.debug("Deep debug enabled");
-			getConfig().getStringList("Listenable-Performances").forEach(Debugger::monitorPerformance);
+			getServer().getLogger().setParent(LogUtils.getLogger());
 		}
 
-		long start = System.currentTimeMillis();
 		configPreferences = new ConfigPreferences(this);
+		exceptionLogHandler = new ExceptionLogHandler(this);
+		exceptionLogHandler.setMainPackage("me.despical");
+		exceptionLogHandler.addBlacklistedClass("me.despical.classicduels.user.data.MysqlManager", "me.despical.commons.database.MysqlDatabase");
+		exceptionLogHandler.setRecordMessage("[CD] We have found a bug in the code. Use our issue tracker on our GitHub repo with the following error given above or you can join our Discord server (https://discord.gg/rVkaGmyszE)");
+
+		LogUtils.log("Initialization started!");
+		long start = System.currentTimeMillis();
 
 		setupFiles();
 		initializeClasses();
 		checkUpdate();
 
-		Debugger.debug("Initialization finished took {0} ms", System.currentTimeMillis() - start);
+		LogUtils.log("Initialization finished took {0} ms.", System.currentTimeMillis() - start);
 
-		if (configPreferences.getOption(ConfigPreferences.Option.NAMETAGS_HIDDEN)) {
-			Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, () ->
-				Bukkit.getOnlinePlayers().forEach(ArenaUtils::updateNameTagsVisibility), 60, 140);
+		if (configPreferences.getOption(ConfigPreferences.Option.NAME_TAGS_HIDDEN)) {
+			getServer().getScheduler().scheduleSyncRepeatingTask(this, () -> getServer().getOnlinePlayers().forEach(ArenaUtils::updateNameTagsVisibility), 60, 140);
 		}
 	}
 
 	private boolean validateIfPluginShouldStart() {
-		if (VersionResolver.isCurrentLower(VersionResolver.ServerVersion.v1_9_R1)) {
-			Debugger.sendConsoleMessage("&cYour server version is not supported by Classic Duels!");
-			Debugger.sendConsoleMessage("&cSadly, we must shut off. Maybe you consider changing your server version?");
+		if (!VersionResolver.isCurrentBetween(VersionResolver.ServerVersion.v1_8_R1, VersionResolver.ServerVersion.v1_19_R1)) {
+			LogUtils.sendConsoleMessage("&cYour server version is not supported by King of the Ladder Premium!");
+			LogUtils.sendConsoleMessage("&cSadly, we must shut off. Maybe you consider changing your server version?");
 			return false;
-		} try {
+		}
+
+		if (!configPreferences.getOption(ConfigPreferences.Option.IGNORE_WARNING_MESSAGES) && JavaVersion.getCurrentVersion().isAt(JavaVersion.JAVA_8)) {
+			LogUtils.sendConsoleMessage("[KOTLP] &cThis plugin won't support Java 8 in future updates.");
+			LogUtils.sendConsoleMessage("[KOTLP] &cSo, maybe consider to update your version, right?");
+		}
+
+		try {
 			Class.forName("org.spigotmc.SpigotConfig");
-		} catch (ClassNotFoundException e) {
-			Debugger.sendConsoleMessage("&cYour server software is not supported by Classic Duels!");
-			Debugger.sendConsoleMessage("&cWe support only Spigot and Spigot forks only! Shutting off...");
+		} catch (Exception e) {
+			LogUtils.sendConsoleMessage("&cYour server software is not supported by King of the Ladder Premium!");
+			LogUtils.sendConsoleMessage("&cWe support only Spigot and Spigot forks only! Shutting off...");
 			return false;
 		}
 
@@ -128,17 +135,15 @@ public class Main extends JavaPlugin {
 
 	@Override
 	public void onDisable() {
-		if (forceDisable) {
-			return;
-		}
+		if (forceDisable) return;
 
-		Debugger.debug("System disable initialized");
+		LogUtils.log("System disable initialized.");
 		long start = System.currentTimeMillis();
 
-		Bukkit.getLogger().removeHandler(exceptionLogHandler);
+		getServer().getLogger().removeHandler(exceptionLogHandler);
 		saveAllUserStatistics();
 
-		if (configPreferences.getOption(ConfigPreferences.Option.DATABASE_ENABLED)) {
+		if (database != null) {
 			database.shutdownConnPool();
 		}
 
@@ -163,7 +168,8 @@ public class Main extends JavaPlugin {
 			}
 		}
 
-		Debugger.debug("System disable finished took {0} ms", System.currentTimeMillis() - start);
+		LogUtils.log("System disable finished took {0} ms.", System.currentTimeMillis() - start);
+		LogUtils.disableLogging();
 	}
 
 	private void initializeClasses() {
@@ -175,8 +181,7 @@ public class Main extends JavaPlugin {
 		}
 
 		if (configPreferences.getOption(ConfigPreferences.Option.DATABASE_ENABLED)) {
-			FileConfiguration config = ConfigUtils.getConfig(this, "mysql");
-			database = new MysqlDatabase(config.getString("user"), config.getString("password"), config.getString("address"));
+			database = new MysqlDatabase(this, "mysql");
 		}
 
 		languageManager = new LanguageManager(this);
@@ -203,76 +208,48 @@ public class Main extends JavaPlugin {
 		commandFramework = new CommandFramework(this);
 		cuboidSelector = new CuboidSelector(this);
 
-		registerSoftDependenciesAndServices();
+		registerSoftDependencies();
 	}
 
-	private void registerSoftDependenciesAndServices() {
-		Debugger.debug("Hooking into soft dependencies");
-		long start = System.currentTimeMillis();
+	private void registerSoftDependencies() {
+		LogUtils.log("Hooking into soft dependencies.");
 
 		startPluginMetrics();
 
-		if (getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-			Debugger.debug("Hooking into PlaceholderAPI");
-			new PlaceholderManager().register();
+		if (chatManager.isPapiEnabled()) {
+			LogUtils.log("Hooking into PlaceholderAPI.");
+			new PlaceholderManager(this);
 		}
 
-		Debugger.debug("Hooked into soft dependencies took {0} ms", System.currentTimeMillis() - start);
+		LogUtils.log("Hooked into soft dependencies.");
 	}
 
 	private void startPluginMetrics() {
 		Metrics metrics = new Metrics(this, 9235);
 
-		if (!metrics.isEnabled()) {
-			return;
-		}
+		if (!metrics.isEnabled()) return;
 
-		metrics.addCustomChart(new Metrics.SimplePie("database_enabled", () -> String.valueOf(configPreferences.getOption(ConfigPreferences.Option.DATABASE_ENABLED))));
-		metrics.addCustomChart(new Metrics.SimplePie("bungeecord_hooked", () -> String.valueOf(configPreferences.getOption(ConfigPreferences.Option.BUNGEE_ENABLED))));
 		metrics.addCustomChart(new Metrics.SimplePie("locale_used", () -> languageManager.getPluginLocale().getPrefix()));
-		metrics.addCustomChart(new Metrics.SimplePie("update_notifier", () -> {
-			if (getConfig().getBoolean("Update-Notifier.Enabled", true)) {
-				return getConfig().getBoolean("Update-Notifier.Notify-Beta-Versions", true) ? "Enabled with beta notifier" : "Enabled";
-			}
+		metrics.addCustomChart(new Metrics.SimplePie("database_enabled", () -> configPreferences.getOption(ConfigPreferences.Option.DATABASE_ENABLED) ? "Enabled" : "Disabled"));
+		metrics.addCustomChart(new Metrics.SimplePie("update_notifier", () -> configPreferences.getOption(ConfigPreferences.Option.UPDATE_NOTIFIER_ENABLED) ? "Enabled" : "Disabled"));
+		metrics.addCustomChart(new Metrics.SimplePie("bungeecord_hooked", () -> configPreferences.getOption(ConfigPreferences.Option.BUNGEE_ENABLED) ? "Enabled" : "Disabled"));
 
-			return getConfig().getBoolean("Update-Notifier.Notify-Beta-Versions", true) ? "Beta notifier only" : "Disabled";
-		}));
 	}
 
 	private void checkUpdate() {
-		if (!getConfig().getBoolean("Update-Notifier.Enabled", true)) {
-			return;
-		}
+		if (!configPreferences.getOption(ConfigPreferences.Option.UPDATE_NOTIFIER_ENABLED)) return;
 
 		UpdateChecker.init(this, 85356).requestUpdateCheck().whenComplete((result, exception) -> {
-			if (!result.requiresUpdate()) {
-				return;
+			if (result.requiresUpdate()) {
+				LogUtils.sendConsoleMessage("[CD] Found a new version available: v" + result.getNewestVersion());
+				LogUtils.sendConsoleMessage("[CD] Download it on SpigotMC:");
+				LogUtils.sendConsoleMessage("[CD] https://www.spigotmc.org/resources/king-of-the-ladder-premium-1-8-1-19.102644/");
 			}
-
-			if (result.getNewestVersion().contains("b")) {
-				if (getConfig().getBoolean("Update-Notifier.Notify-Beta-Versions", true)) {
-					Debugger.sendConsoleMessage("[ClassicDuels] Found a new beta version available: v" + result.getNewestVersion());
-					Debugger.sendConsoleMessage("[ClassicDuels] Download it on SpigotMC:");
-					Debugger.sendConsoleMessage("[ClassicDuels] spigotmc.org/resources/classic-duels-1-9-1-16-4.85356/");
-				}
-
-				return;
-			}
-
-			Debugger.sendConsoleMessage("[ClassicDuels] Found a new version available: v" + result.getNewestVersion());
-			Debugger.sendConsoleMessage("[ClassicDuels] Download it SpigotMC:");
-			Debugger.sendConsoleMessage("[ClassicDuels] spigotmc.org/resources/classic-duels.85356/");
 		});
 	}
 
 	private void setupFiles() {
-		for (String fileName : Arrays.asList("arenas", "bungee", "rewards", "stats", "items", "mysql", "messages")) {
-			File file = new File(getDataFolder() + File.separator + fileName + ".yml");
-
-			if (!file.exists()) {
-				saveResource(fileName + ".yml", false);
-			}
-		}
+		Collections.streamOf("arenas", "bungee", "rewards", "stats", "items", "mysql", "messages").filter(name -> !new File(getDataFolder(),name + ".yml").exists()).forEach(name -> saveResource(name + ".yml", false));
 	}
 
 	public RewardsFactory getRewardsFactory() {
@@ -303,10 +280,6 @@ public class Main extends JavaPlugin {
 		return chatManager;
 	}
 
-	public LanguageManager getLanguageManager() {
-		return languageManager;
-	}
-
 	public CuboidSelector getCuboidSelector() {
 		return cuboidSelector;
 	}
@@ -324,21 +297,22 @@ public class Main extends JavaPlugin {
 
 				for (StatsStorage.StatisticType stat : StatsStorage.StatisticType.values()) {
 					if (!stat.isPersistent()) continue;
+					int val = user.getStat(stat);
+
 					if (update.toString().equalsIgnoreCase(" SET ")) {
-						update.append(stat.getName()).append("'='").append(user.getStat(stat));
+						update.append(stat.getName()).append("'='").append(val);
 					}
 
-					update.append(", ").append(stat.getName()).append("'='").append(user.getStat(stat));
+					update.append(", ").append(stat.getName()).append("'='").append(val);
 				}
 
 				String finalUpdate = update.toString();
-				((MysqlManager) userManager.getDatabase()).getDatabase().executeUpdate("UPDATE " + ((MysqlManager) getUserManager().getDatabase()).getTableName() + finalUpdate + " WHERE UUID='" + user.getPlayer().getUniqueId().toString() + "';");
+				MysqlManager database = ((MysqlManager) userManager.getDatabase());
+				database.getDatabase().executeUpdate("UPDATE " + database.getTableName() + finalUpdate + " WHERE UUID='" + user.getUniqueId().toString() + "';");
 				continue;
 			}
 
-			for (StatsStorage.StatisticType stat : StatsStorage.StatisticType.values()) {
-				userManager.getDatabase().saveStatistic(user, stat);
-			}
+			userManager.getDatabase().saveAllStatistic(user);
 		}
 	}
 }

@@ -53,6 +53,9 @@ public abstract class Kit {
 	}
 
 	public void giveKit(Player player) {
+		player.getInventory().clear();
+		player.getInventory().setArmorContents(null);
+
 		giveArmors(player);
 
 		File file = new File(plugin.getDataFolder() + File.separator + "layouts" + File.separator, player.getUniqueId().toString() + ".layout");
@@ -65,5 +68,7 @@ public abstract class Kit {
 		for (Map.Entry<ItemStack, Integer> item : items.entrySet()) {
 			player.getInventory().setItem(item.getValue(), item.getKey());
 		}
+
+		player.updateInventory();
 	}
 }

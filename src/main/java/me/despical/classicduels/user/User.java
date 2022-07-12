@@ -23,10 +23,8 @@ import me.despical.classicduels.api.StatsStorage;
 import me.despical.classicduels.api.events.player.CDPlayerStatisticChangeEvent;
 import me.despical.classicduels.arena.Arena;
 import me.despical.classicduels.arena.ArenaRegistry;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scoreboard.ScoreboardManager;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -40,16 +38,18 @@ import java.util.UUID;
  */
 public class User {
 
-	private static final Main plugin = JavaPlugin.getPlugin(Main.class);
-	private final ScoreboardManager scoreboardManager = Bukkit.getScoreboardManager();
-	private final Player player;
-	private final UUID uuid;
-	private boolean spectator = false;
-	private final Map<StatsStorage.StatisticType, Integer> stats = new EnumMap<>(StatsStorage.StatisticType.class);
+	private final static Main plugin = JavaPlugin.getPlugin(Main.class);
 
-	public User(UUID uuid) {
-		this.uuid = uuid;
-		this.player = plugin.getServer().getPlayer(uuid);
+	private final UUID uuid;
+	private final Player player;
+	private final Map<StatsStorage.StatisticType, Integer> stats;
+
+	private boolean spectator;
+
+	public User(Player player) {
+		this.player = player;
+		this.uuid = player.getUniqueId();
+		this.stats = new EnumMap<>(StatsStorage.StatisticType.class);
 	}
 
 	public Arena getArena() {
@@ -60,48 +60,44 @@ public class User {
 		return player;
 	}
 
+	public UUID getUniqueId() {
+		return uuid;
+	}
+
 	public boolean isSpectator() {
 		return spectator;
 	}
 
-	public void setSpectator(boolean b) {
-		spectator = b;
+	public void setSpectator(boolean spectating) {
+		spectator = spectating;
 	}
 
-	public int getStat(StatsStorage.StatisticType stat) {
-		if (!stats.containsKey(stat)) {
-			stats.put(stat, 0);
-			return 0;
-		} else if (stats.get(stat) == null) {
+	public int getStat(StatsStorage.StatisticType statisticType) {
+		Integer statistic = stats.get(statisticType);
+
+		if (statistic == null) {
+			stats.put(statisticType, 0);
 			return 0;
 		}
 
-		return stats.get(stat);
+		return statistic;
 	}
 
-	public UUID getUniqueID() {
-		return uuid;
+	public void setStat(StatsStorage.StatisticType stat, int value) {
+		stats.put(stat, value);
+
+		plugin.getServer().getScheduler().runTask(plugin, () -> plugin.getServer().getPluginManager().callEvent(new CDPlayerStatisticChangeEvent(getArena(), player, stat, value)));
 	}
 
-	public void removeScoreboard() {
-		player.setScoreboard(scoreboardManager.getNewScoreboard());
+	public void addStat(StatsStorage.StatisticType stat, int value) {
+		setStat(stat, getStat(stat) + value);
 	}
 
-	public void setStat(StatsStorage.StatisticType stat, int i) {
-		stats.put(stat, i);
+	public void resetStats() {
+		for (StatsStorage.StatisticType statistic : StatsStorage.StatisticType.values()) {
+			if (statistic.isPersistent()) continue;
 
-		Bukkit.getScheduler().runTask(plugin, () -> {
-			CDPlayerStatisticChangeEvent playerStatisticChangeEvent = new CDPlayerStatisticChangeEvent(getArena(), player, stat, i);
-			Bukkit.getPluginManager().callEvent(playerStatisticChangeEvent);
-		});
-	}
-
-	public void addStat(StatsStorage.StatisticType stat, int i) {
-		stats.put(stat, getStat(stat) + i);
-
-		Bukkit.getScheduler().runTask(plugin, () -> {
-			CDPlayerStatisticChangeEvent playerStatisticChangeEvent = new CDPlayerStatisticChangeEvent(getArena(), player, stat, getStat(stat));
-			Bukkit.getPluginManager().callEvent(playerStatisticChangeEvent);
-		});
+			setStat(statistic, 0);
+		}
 	}
 }

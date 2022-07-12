@@ -32,16 +32,22 @@ import org.jetbrains.annotations.NotNull;
  */
 public class CDPlayerStatisticChangeEvent extends ClassicDuelsEvent {
 
-	private final HandlerList HANDLERS = new HandlerList();
+	private static final HandlerList HANDLERS = new HandlerList();
+
 	private final Player player;
 	private final StatsStorage.StatisticType statisticType;
 	private final int number;
 
 	public CDPlayerStatisticChangeEvent(Arena eventArena, Player player, StatsStorage.StatisticType statisticType, int number) {
-		super(eventArena);
+		super (eventArena);
+
 		this.player = player;
 		this.statisticType = statisticType;
 		this.number = number;
+	}
+
+	public static HandlerList getHandlerList() {
+		return HANDLERS;
 	}
 
 	@NotNull

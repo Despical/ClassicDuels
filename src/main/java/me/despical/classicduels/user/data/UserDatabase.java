@@ -18,8 +18,10 @@
 
 package me.despical.classicduels.user.data;
 
+import me.despical.classicduels.Main;
 import me.despical.classicduels.api.StatsStorage;
 import me.despical.classicduels.user.User;
+import org.bukkit.plugin.java.JavaPlugin;
 
 /**
  * @author Despical
@@ -28,26 +30,11 @@ import me.despical.classicduels.user.User;
  */
 public interface UserDatabase {
 
-	/**
-	 * Saves player statistic into active database.
-	 *
-	 * @param user to retrieve statistic from
-	 * @param stat to save to storage
-	 */
+	Main plugin = JavaPlugin.getPlugin(Main.class);
+
 	void saveStatistic(User user, StatsStorage.StatisticType stat);
 
-	/**
-	 * Saves player statistic to active database.
-	 *
-	 * @param user to retrieve statistic from
-	 */
 	void saveAllStatistic(User user);
 
-	/**
-	 * Loads player statistic from active database.
-	 *
-	 * @param user to load statistic for
-	 */
 	void loadStatistics(User user);
-
 }

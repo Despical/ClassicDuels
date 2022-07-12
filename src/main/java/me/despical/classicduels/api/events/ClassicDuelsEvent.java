@@ -28,18 +28,13 @@ import org.bukkit.event.Event;
  */
 public abstract class ClassicDuelsEvent extends Event {
 
-	protected Arena arena;
+	protected final Arena arena;
 
 	public ClassicDuelsEvent(Arena eventArena) {
-		arena = eventArena;
+		this.arena = eventArena;
 	}
 
-	/**
-	 * Returns event arena
-	 *
-	 * @return event arena
-	 */
 	public Arena getArena() {
-		return arena;
+		return this.arena;
 	}
 }

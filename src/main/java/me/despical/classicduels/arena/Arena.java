@@ -28,7 +28,7 @@ import me.despical.classicduels.arena.options.ArenaOption;
 import me.despical.classicduels.handlers.rewards.Reward;
 import me.despical.classicduels.kits.KitRegistry;
 import me.despical.classicduels.user.User;
-import me.despical.classicduels.utils.Debugger;
+import me.despical.commons.compat.Titles;
 import me.despical.commons.configuration.ConfigUtils;
 import me.despical.commons.miscellaneous.AttributeUtils;
 import me.despical.commons.miscellaneous.MiscUtils;
@@ -83,8 +83,8 @@ public class Arena extends BukkitRunnable {
 			arenaOptions.put(option, option.getDefaultValue());
 		}
 
-		if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BOSSBAR_ENABLED)) {
-			gameBar = Bukkit.createBossBar(plugin.getChatManager().colorMessage("Bossbar.Main-Title"), BarColor.BLUE, BarStyle.SOLID);
+		if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BOSS_BAR_ENABLED)) {
+			gameBar = Bukkit.createBossBar(plugin.getChatManager().message("Bossbar.Main-Title"), BarColor.BLUE, BarStyle.SOLID);
 		}
 
 		scoreboardManager = new ScoreboardManager(plugin, this);
@@ -104,138 +104,119 @@ public class Arena extends BukkitRunnable {
 			return;
 		}
 
-		Debugger.performance("ArenaTask", "[PerformanceMonitor] [{0}] Running game task", getId());
-		long start = System.currentTimeMillis();
+		int size = players.size(), waitingTime = plugin.getConfig().getInt("Starting-Waiting-Time", 5);
 
-		switch (getArenaState()) {
+		switch (arenaState) {
 			case WAITING_FOR_PLAYERS:
-				if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BUNGEE_ENABLED)) {
-					plugin.getServer().setWhitelist(false);
-				}
 
-				if (getPlayers().size() < 2) {
+				if (size < 2) {
+					if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BOSS_BAR_ENABLED)) {
+						gameBar.setTitle(plugin.getChatManager().message("boss_bar.waiting_for_players"));
+					}
+
 					if (getTimer() <= 0) {
 						setTimer(45);
-						broadcast(plugin.getChatManager().formatMessage(this, plugin.getChatManager().colorMessage("In-Game.Messages.Lobby-Messages.Waiting-For-Players"), 2));
-						break;
+						broadcastMessage(plugin.getChatManager().message("in_game.messages.lobby_messages.waiting_for_players"));
 					}
 				} else {
-					if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BOSSBAR_ENABLED)) {
-						gameBar.setTitle(plugin.getChatManager().colorMessage("Bossbar.Waiting-For-Players"));
-					}
-
-					broadcast(plugin.getChatManager().colorMessage("In-Game.Messages.Lobby-Messages.Enough-Players-To-Start"));
-					setArenaState(ArenaState.STARTING);
-					setTimer(plugin.getConfig().getInt("Starting-Waiting-Time", 5));
 					showPlayers();
+					setTimer(waitingTime);
+					setArenaState(ArenaState.STARTING);
+					broadcastMessage(plugin.getChatManager().prefixedMessage("in_game.messages.lobby_messages.enough_players_to_start"));
+					break;
 				}
 
 				setTimer(getTimer() - 1);
 				break;
 			case STARTING:
-				if (players.size() == 2 && getTimer() >= plugin.getConfig().getInt("Starting-Waiting-Time", 5)) {
-					setTimer(plugin.getConfig().getInt("Starting-Waiting-Time", 5));
-					broadcast(plugin.getChatManager().colorMessage("In-Game.Messages.Lobby-Messages.Start-In").replace("%time%", String.valueOf(getTimer())));
-				}
-
-				if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BOSSBAR_ENABLED)) {
-					gameBar.setTitle(plugin.getChatManager().colorMessage("Bossbar.Starting-In").replace("%time%", String.valueOf(getTimer())));
-					gameBar.setProgress(getTimer() / plugin.getConfig().getDouble("Starting-Waiting-Time", 5));
+				if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BOSS_BAR_ENABLED)) {
+					gameBar.setProgress((double) getTimer() / waitingTime);
+					gameBar.setTitle(plugin.getChatManager().message("boss_bar.starting_in").replace("%time%", Integer.toString(getTimer())));
 				}
 
 				if (!plugin.getConfigPreferences().getOption(ConfigPreferences.Option.DISABLE_LEVEL_COUNTDOWN)) {
-					for (Player player : getPlayers()) {
-						player.setExp((float) (getTimer() / plugin.getConfig().getDouble("Starting-Waiting-Time", 5)));
+					for (Player player : players) {
 						player.setLevel(getTimer());
+						player.setExp((float) (getTimer() / waitingTime));
 					}
 				}
 
-				if (getPlayers().size() < 2) {
-					if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BOSSBAR_ENABLED)) {
-						gameBar.setTitle(plugin.getChatManager().colorMessage("Bossbar.Waiting-For-Players"));
-						gameBar.setProgress(1.0);
+				if (size < 2) {
+					if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BOSS_BAR_ENABLED)) {
+						gameBar.setProgress(1D);
+						gameBar.setTitle(plugin.getChatManager().message("boss_bar.waiting_for_players"));
 					}
 
-					broadcast(plugin.getChatManager().formatMessage(this, plugin.getChatManager().colorMessage("In-Game.Messages.Lobby-Messages.Waiting-For-Players"), 2));
-
+					setTimer(waitingTime);
 					setArenaState(ArenaState.WAITING_FOR_PLAYERS);
-					Bukkit.getPluginManager().callEvent(new CDGameStartEvent(this));
-					setTimer(15);
+					broadcastMessage(plugin.getChatManager().message("in_game.messages.lobby_messages.waiting_for_players"));
 
-					for (Player player : getPlayers()) {
-						player.setExp(1);
+					for (Player player : players) {
+						player.setExp(1F);
 						player.setLevel(0);
 					}
 
 					break;
 				}
 
-				if (getTimer() == 0) {
-					CDGameStartEvent gameStartEvent = new CDGameStartEvent(this);
+				if (players.size() == 2 && getTimer() >= waitingTime) {
+					setTimer(waitingTime);
+					broadcastMessage(plugin.getChatManager().message("In-Game.Messages.Lobby-Messages.Start-In", getTimer()));
+				}
 
-					Bukkit.getPluginManager().callEvent(gameStartEvent);
+				if (getTimer() == 15 || getTimer() == 10 || getTimer() <= 5) {
+					broadcastMessage(plugin.getChatManager().message("In-Game.Messages.Lobby-Messages.Start-In").replace("seconds", getTimer() == 1 ? "second" : "seconds").replace("%time%", String.valueOf(getTimer())));
+				}
+
+				if (getTimer() == 0) {
 					setArenaState(ArenaState.IN_GAME);
 
-					if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BOSSBAR_ENABLED)) {
-						gameBar.setProgress(1.0);
+					plugin.getServer().getPluginManager().callEvent(new CDGameStartEvent(this));
+
+					if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BOSS_BAR_ENABLED)) {
+						gameBar.setProgress(1D);
+						gameBar.setTitle(plugin.getChatManager().message("boss_bar.in_game_info"));
 					}
 
-					setTimer(6);
-
-					if (players.isEmpty()) {
-						break;
-					}
-
+					setTimer(plugin.getConfig().getInt("Classic-Gameplay-Time", 540));
 					teleportAllToStartLocation();
 
-					for (Player player : getPlayers()) {
-						AttributeUtils.setAttackCooldown(player, plugin.getConfig().getDouble("Hit-Cooldown-Delay", 4));
-						player.getInventory().clear();
-						KitRegistry.getBaseKit().giveKit(player);
-						player.setGameMode(GameMode.SURVIVAL);
-
-						ArenaUtils.hidePlayersOutsideTheGame(player, this);
+					for (Player player : players) {
 						ArenaUtils.updateNameTagsVisibility(player);
-
-						setTimer(plugin.getConfig().getInt("Classic-Gameplay-Time", 540));
+						ArenaUtils.hidePlayersOutsideTheGame(player, this);
 
 						plugin.getUserManager().getUser(player).addStat(StatsStorage.StatisticType.GAMES_PLAYED, 1);
 
+						player.setGameMode(GameMode.SURVIVAL);
+						player.sendMessage(plugin.getChatManager().prefixedMessage("in_game.messages.lobby_messages.game_started"));
+
+						KitRegistry.getBaseKit().giveKit(player);
+
 						for (String msg : plugin.getChatManager().getStringList("In-Game.Messages.Lobby-Messages.Game-Started")) {
-							MiscUtils.sendCenteredMessage(player, plugin.getChatManager().colorRawMessage(msg).replace("%opponent%", scoreboardManager.getOpponent(player)));
+							MiscUtils.sendCenteredMessage(player, plugin.getChatManager().coloredRawMessage(msg).replace("%opponent%", scoreboardManager.getOpponent(player)));
 						}
-
-						player.updateInventory();
 					}
-				}
-
-				if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BOSSBAR_ENABLED)) {
-					gameBar.setTitle(plugin.getChatManager().colorMessage("Bossbar.In-Game-Info"));
-				}
-
-				if (getTimer() <= 5) {
-					broadcast(plugin.getChatManager().colorMessage("In-Game.Messages.Lobby-Messages.Start-In").replace("seconds", getTimer() == 1 ? "second" : "seconds").replace("%time%", String.valueOf(getTimer())));
 				}
 
 				setTimer(getTimer() - 1);
 				break;
 			case IN_GAME:
-				if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BUNGEE_ENABLED)) {
-					plugin.getServer().setWhitelist(2 <= players.size());
-				}
+				int playerSize = getPlayersLeft().size();
 
-				if (getTimer() <= 0) {
+				if (playerSize < 2 || getTimer() <= 0) {
 					ArenaManager.stopGame(false, this);
 					return;
 				}
 
-				if (getPlayersLeft().size() < 2) {
-					ArenaManager.stopGame(false, this);
-					return;
+				if (getTimer() == 30 || getTimer() == 60) {
+					String title = plugin.getChatManager().message("in_game.messages.seconds_left_title").replace("%time%", Integer.toString(getTimer()));
+					String subtitle = plugin.getChatManager().message("in_game.messages.seconds_left_subtitle").replace("%time%", Integer.toString(getTimer()));
+
+					players.forEach(p -> Titles.sendTitle(p, title, subtitle));
 				}
 
 				for (Player player : players) {
-					Player opponent = Bukkit.getPlayer(scoreboardManager.getOpponent(player));
+					Player opponent = plugin.getServer().getPlayer(scoreboardManager.getOpponent(player));
 
 					if (opponent != null) {
 						player.setCompassTarget(opponent.getLocation());
@@ -245,51 +226,42 @@ public class Arena extends BukkitRunnable {
 				setTimer(getTimer() - 1);
 				break;
 			case ENDING:
+				if (getTimer() != 0) {
+					setTimer(getTimer() - 1);
+					return;
+				}
+
 				scoreboardManager.stopAllScoreboards();
 
-				if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BUNGEE_ENABLED)) {
-					plugin.getServer().setWhitelist(false);
+				if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BOSS_BAR_ENABLED)) {
+					gameBar.setTitle(plugin.getChatManager().message("boss_bar.game_ended"));
 				}
 
-				if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BOSSBAR_ENABLED)) {
-					gameBar.setTitle(plugin.getChatManager().colorMessage("Bossbar.Game-Ended"));
-				}
-
-				List<Player> playersToQuit = new ArrayList<>(getPlayers());
-
-				for (Player player : playersToQuit) {
-					plugin.getUserManager().getUser(player).removeScoreboard();
-					player.setGameMode(GameMode.SURVIVAL);
-
+				for (Player player : players) {
+//					ArenaUtils.showPlayersOutsideTheGame(player, this);
 					AttributeUtils.resetAttackCooldown(player);
 
-					for (Player playerToShow : Bukkit.getOnlinePlayers()) {
-						player.showPlayer(plugin, playerToShow);
-
-						if (!ArenaRegistry.isInArena(playerToShow)) {
-							playerToShow.showPlayer(plugin, player);
-						}
-					}
-
-					player.getActivePotionEffects().forEach(effect -> player.removePotionEffect(effect.getType()));
-					player.setWalkSpeed(0.2f);
+					player.setGameMode(GameMode.SURVIVAL);
+					player.setFlySpeed(.1f);
+					player.setWalkSpeed(.2f);
 					player.setFlying(false);
 					player.setAllowFlight(false);
 					player.getInventory().clear();
 					player.getInventory().setArmorContents(null);
-					player.setFireTicks(0);
-					player.setFoodLevel(20);
+					player.getActivePotionEffects().forEach(effect -> player.removePotionEffect(effect.getType()));
 
+					teleportToEndLocation(player);
 					doBarAction(BarAction.REMOVE, player);
 				}
 
-				teleportAllToEndLocation();
+				plugin.getUserManager().getUsers(this).forEach(user -> user.setSpectator(false));
+				plugin.getRewardsFactory().performReward(this, Reward.RewardType.END_GAME);
 
 				if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.INVENTORY_MANAGER_ENABLED)) {
 					players.forEach(player -> InventorySerializer.loadInventory(plugin, player));
 				}
 
-				broadcast(plugin.getChatManager().colorMessage("Commands.Teleported-To-The-Lobby"));
+				broadcastMessage(plugin.getChatManager().message("Commands.Teleported-To-The-Lobby"));
 
 				for (User user : plugin.getUserManager().getUsers(this)) {
 					user.setSpectator(false);
@@ -298,37 +270,34 @@ public class Arena extends BukkitRunnable {
 
 				plugin.getRewardsFactory().performReward(this, Reward.RewardType.END_GAME);
 
-				if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BUNGEE_ENABLED)) {
-					if (ConfigUtils.getConfig(plugin, "bungee").getBoolean("Shutdown-When-Game-Ends")) {
-						plugin.getServer().shutdown();
-					}
-				}
-
 				setArenaState(ArenaState.RESTARTING);
+				broadcastMessage(plugin.getChatManager().prefixedMessage("commands.teleported-to-the-lobby"));
 				break;
 			case RESTARTING:
 				players.clear();
+
 				clearArea();
-				setArenaState(ArenaState.WAITING_FOR_PLAYERS);
 
 				if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BUNGEE_ENABLED)) {
 					ArenaRegistry.shuffleBungeeArena();
 
-					for (Player player : Bukkit.getOnlinePlayers()) {
-						ArenaManager.joinAttempt(player, ArenaRegistry.getArenas().get(ArenaRegistry.getBungeeArena()));
+//					Arena bungeeArena = ArenaRegistry.getBungeeArena(); no method yet
+					Arena bungeeArena = null;
+
+					for (Player player : plugin.getServer().getOnlinePlayers()) {
+						ArenaManager.joinAttempt(player, bungeeArena);
 					}
 				}
 
-				if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BOSSBAR_ENABLED)) {
-					gameBar.setTitle(plugin.getChatManager().colorMessage("Bossbar.Waiting-For-Players"));
+				if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BOSS_BAR_ENABLED)) {
+					gameBar.setTitle(plugin.getChatManager().message("boss_bar.waiting_for_players"));
 				}
 
+				setArenaState(ArenaState.WAITING_FOR_PLAYERS);
 				break;
 			default:
 				break;
 		}
-
-		Debugger.performance("ArenaTask", "[PerformanceMonitor] [{0}] Game task finished took {1} ms", getId(), System.currentTimeMillis() - start);
 	}
 
 	public ScoreboardManager getScoreboardManager() {
@@ -444,7 +413,7 @@ public class Arena extends BukkitRunnable {
 	 * @param p player
 	 */
 	public void doBarAction(BarAction action, Player p) {
-		if (!plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BOSSBAR_ENABLED)) {
+		if (!plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BOSS_BAR_ENABLED)) {
 			return;
 		}
 
@@ -558,12 +527,13 @@ public class Arena extends BukkitRunnable {
 		gameLocations.put(GameLocation.END, endLoc);
 	}
 
-	public void broadcast(String msg) {
-		players.forEach(p -> p.sendMessage(plugin.getChatManager().colorRawMessage(msg)));
+	public void broadcastMessage(String message) {
+		for (Player player : players) {
+			player.sendMessage(message);
+		}
 	}
 
 	public void start() {
-		Debugger.debug("[{0}] Game instance started", id);
 		runTaskTimer(plugin, 20L, 20L);
 		setArenaState(ArenaState.RESTARTING);
 	}

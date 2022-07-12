@@ -20,70 +20,53 @@ package me.despical.classicduels.user;
 
 import me.despical.classicduels.ConfigPreferences;
 import me.despical.classicduels.Main;
-import me.despical.classicduels.api.StatsStorage;
 import me.despical.classicduels.arena.Arena;
 import me.despical.classicduels.user.data.FileStats;
 import me.despical.classicduels.user.data.MysqlManager;
 import me.despical.classicduels.user.data.UserDatabase;
-import me.despical.classicduels.utils.Debugger;
-import org.bukkit.Bukkit;
+import me.despical.commons.util.LogUtils;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * @author Despical
- * @since 1.0.0
  * <p>
  * Created at 11.10.2020
  */
 public class UserManager {
 
+	private final Set<User> users;
 	private final UserDatabase database;
-	private final List<User> users = new ArrayList<>();
 
 	public UserManager(Main plugin) {
-		if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.DATABASE_ENABLED)) {
-			database = new MysqlManager(plugin);
-			Debugger.debug("MySQL Stats enabled");
-		} else {
-			database = new FileStats(plugin);
-			Debugger.debug("File Stats enabled");
-		}
+		this.users = new HashSet<>();
+		this.database = plugin.getConfigPreferences().getOption(ConfigPreferences.Option.DATABASE_ENABLED) ? new MysqlManager() : new FileStats();
 
-		loadStatsForPlayersOnline();
-	}
-
-	private void loadStatsForPlayersOnline() {
-		Bukkit.getServer().getOnlinePlayers().stream().map(this::getUser).forEach(this::loadStatistics);
+		plugin.getServer().getOnlinePlayers().forEach(this::getUser);
 	}
 
 	public User getUser(Player player) {
+		final UUID uuid = player.getUniqueId();
+
 		for (User user : users) {
-			if (user.getPlayer().equals(player)) {
+			if (user.getUniqueId().equals(uuid)) {
 				return user;
 			}
 		}
 
-		Debugger.debug("Registering new user {0} ({1})", player.getUniqueId(), player.getName());
+		LogUtils.log("Registering new user {0} ({1})", uuid, player.getName());
 
-		User user = new User(player.getUniqueId());
+		final User user = new User(player);
 		users.add(user);
+
+		database.loadStatistics(user);
 		return user;
 	}
 
-	public List<User> getUsers(Arena arena) {
-		return arena.getPlayers().stream().map(this::getUser).collect(Collectors.toList());
-	}
-
-	public void saveStatistic(User user, StatsStorage.StatisticType stat) {
-		if (!stat.isPersistent()) {
-			return;
-		}
-
-		database.saveStatistic(user, stat);
+	public Set<User> getUsers(Arena arena) {
+		return arena.getPlayers().stream().map(this::getUser).collect(Collectors.toSet());
 	}
 
 	public void saveAllStatistic(User user) {
