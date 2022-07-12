@@ -112,7 +112,7 @@ public class Main extends JavaPlugin {
 
 	private boolean validateIfPluginShouldStart() {
 		if (!VersionResolver.isCurrentBetween(VersionResolver.ServerVersion.v1_8_R1, VersionResolver.ServerVersion.v1_19_R1)) {
-			LogUtils.sendConsoleMessage("&cYour server version is not supported by King of the Ladder Premium!");
+			LogUtils.sendConsoleMessage("&cYour server version is not supported by Classic Duels!");
 			LogUtils.sendConsoleMessage("&cSadly, we must shut off. Maybe you consider changing your server version?");
 			return false;
 		}
@@ -125,7 +125,7 @@ public class Main extends JavaPlugin {
 		try {
 			Class.forName("org.spigotmc.SpigotConfig");
 		} catch (Exception e) {
-			LogUtils.sendConsoleMessage("&cYour server software is not supported by King of the Ladder Premium!");
+			LogUtils.sendConsoleMessage("&cYour server software is not supported by Classic Duels!");
 			LogUtils.sendConsoleMessage("&cWe support only Spigot and Spigot forks only! Shutting off...");
 			return false;
 		}
@@ -243,7 +243,7 @@ public class Main extends JavaPlugin {
 			if (result.requiresUpdate()) {
 				LogUtils.sendConsoleMessage("[CD] Found a new version available: v" + result.getNewestVersion());
 				LogUtils.sendConsoleMessage("[CD] Download it on SpigotMC:");
-				LogUtils.sendConsoleMessage("[CD] https://www.spigotmc.org/resources/king-of-the-ladder-premium-1-8-1-19.102644/");
+				LogUtils.sendConsoleMessage("[CD] https://www.spigotmc.org/resources/classic-duels-1-9-1-16-5.85356/");
 			}
 		});
 	}
