@@ -42,6 +42,19 @@ public class PlayerCommands {
 	}
 
 	@Command(
+		name = "cd"
+	)
+	public void mainCommand(CommandArguments arguments) {
+		if (arguments.isArgumentsEmpty()) {
+			arguments.sendMessage(chatManager.coloredRawMessage("&3This server is running &bClassic Duels &3v" + plugin.getDescription().getVersion() + " by &bDespical"));
+
+			if (arguments.hasPermission("cd.admin")) {
+				arguments.sendMessage(chatManager.coloredRawMessage("&3Commands: &b/" + arguments.getLabel() + " help"));
+			}
+		}
+	}
+
+	@Command(
 		name = "cd.join",
 		senderType = Command.SenderType.PLAYER
 	)

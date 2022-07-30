@@ -20,6 +20,7 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
@@ -215,31 +216,34 @@ public class AdminCommands {
 
 	@Command(
 		name = "cd.help",
-		permission = "cd.admin",
-		usage = "/cd help"
+		permission = "cd.admin"
 	)
 	public void helpCommand(CommandArguments arguments) {
 		arguments.sendMessage("");
-		arguments.sendMessage(plugin.getChatManager().coloredRawMessage("&3&l---- Classic Duels Admin Commands ----"));
+		arguments.sendMessage(chatManager.coloredRawMessage("&3&l---- King of the Ladder Admin Commands ----"));
 		arguments.sendMessage("");
 
-		final Player player = arguments.getSender();
+		CommandSender sender = arguments.getSender();
+		boolean isPlayer = arguments.isSenderPlayer();
 
 		for (Command command : plugin.getCommandFramework().getCommands()) {
-			String usage = command.usage();
+			String usage = command.usage(), desc = command.desc();
 
-			if (arguments.isSenderPlayer()) {
-				player.spigot().sendMessage(new ComponentBuilder(usage)
+			if (usage.isEmpty()) continue;
+
+			if (isPlayer) {
+				((Player) sender).spigot().sendMessage(new ComponentBuilder(usage)
 					.color(ChatColor.AQUA)
 					.event(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, usage))
-					.event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(usage)))
+					.event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, TextComponent.fromLegacyText(desc)))
 					.create());
 			} else {
-				arguments.sendMessage(ChatColor.AQUA + usage);
+				sender.sendMessage(chatManager.coloredRawMessage("&b" + usage + " &3- &b" + desc));
 			}
 		}
 
-		if (arguments.isSenderPlayer()) {
+		if (isPlayer) {
+			final Player player = arguments.getSender();
 			player.sendMessage("");
 			player.spigot().sendMessage(new ComponentBuilder("TIP:").color(ChatColor.YELLOW).bold(true)
 				.append(" Try to ", ComponentBuilder.FormatRetention.NONE).color(ChatColor.GRAY)
