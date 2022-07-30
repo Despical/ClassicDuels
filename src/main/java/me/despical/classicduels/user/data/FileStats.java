@@ -44,23 +44,23 @@ public class FileStats implements UserDatabase {
 	}
 
 	@Override
-	public void saveAllStatistic(User user) {
+	public void saveAllStatistic(final User user) {
 		final String uuid = user.getUniqueId().toString();
 
-		for (StatsStorage.StatisticType stat : StatsStorage.StatisticType.values()) {
-			if (stat.isPersistent()) {
-				config.set(uuid + "." + stat.getName(), user.getStat(stat));
-			}
+		for (final StatsStorage.StatisticType stat : StatsStorage.StatisticType.values()) {
+			if (!stat.isPersistent()) continue;
+
+			config.set(uuid + "." + stat.getName(), user.getStat(stat));
 		}
 
 		ConfigUtils.saveConfig(plugin, config, "stats");
 	}
 
 	@Override
-	public void loadStatistics(final User user) {
+	public void loadStatistics(User user) {
 		final String uuid = user.getUniqueId().toString();
 
-		for (StatsStorage.StatisticType stat : StatsStorage.StatisticType.values()) {
+		for (final StatsStorage.StatisticType stat : StatsStorage.StatisticType.values()) {
 			user.setStat(stat, config.getInt(uuid + "." + stat.getName()));
 		}
 	}

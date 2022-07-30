@@ -30,7 +30,6 @@ import java.util.Map;
 
 /**
  * @author Despical
- * @since 1.0.0
  * <p>
  * Created at 21.10.2020
  */

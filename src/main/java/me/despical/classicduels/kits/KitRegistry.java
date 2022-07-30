@@ -22,7 +22,6 @@ import me.despical.classicduels.kits.base.BaseKit;
 
 /**
  * @author Despical
- * @since 1.0.0
  * <p>
  * Created at 21.10.2020
  */

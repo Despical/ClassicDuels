@@ -19,7 +19,7 @@
 package me.despical.classicduels.utils;
 
 import me.despical.classicduels.kits.KitRegistry;
-import me.despical.commonsbox.number.NumberUtils;
+import me.despical.commons.number.NumberUtils;
 import me.despical.inventoryframework.Gui;
 import me.despical.inventoryframework.GuiItem;
 import me.despical.inventoryframework.pane.StaticPane;

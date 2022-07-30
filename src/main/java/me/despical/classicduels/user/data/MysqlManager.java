@@ -81,13 +81,13 @@ public class MysqlManager implements UserDatabase {
 			if (!stat.isPersistent()) continue;
 
 			final String name = stat.getName();
-			final int val = user.getStat(stat);
+			final int value = user.getStat(stat);
 
 			if (builder.toString().equalsIgnoreCase(" SET ")) {
-				builder.append(name).append("=").append(val);
+				builder.append(name).append("=").append(value);
 			}
 
-			builder.append(", ").append(name).append("=").append(val);
+			builder.append(", ").append(name).append("=").append(value);
 		}
 
 		final String update = builder.toString();

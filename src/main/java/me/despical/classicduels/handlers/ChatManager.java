@@ -43,11 +43,17 @@ public class ChatManager {
 
 	private final Main plugin;
 	private final String prefix;
+	private final boolean papiEnabled;
 
 	public ChatManager(Main plugin) {
 		this.plugin = plugin;
 		this.config = ConfigUtils.getConfig(plugin, "messages");
 		this.prefix = message("in_game.plugin_prefix");
+		this.papiEnabled = plugin.getServer().getPluginManager().isPluginEnabled("PlaceholderAPI");
+	}
+
+	public boolean isPapiEnabled() {
+		return papiEnabled;
 	}
 
 	public String coloredRawMessage(String message) {
@@ -95,7 +101,7 @@ public class ChatManager {
 		returnString = StringUtils.replace(returnString, "%player%", player.getName());
 		returnString = formatPlaceholders(returnString, arena);
 
-		if (plugin.getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+		if (papiEnabled) {
 			returnString = PlaceholderAPI.setPlaceholders(player, returnString);
 		}
 

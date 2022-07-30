@@ -39,7 +39,7 @@ public class PlaceholderManager extends PlaceholderExpansion {
 	public PlaceholderManager(Main plugin) {
 		this.plugin = plugin;
 
-		register();
+		this.register();
 	}
 
 	@Override
@@ -64,11 +64,9 @@ public class PlaceholderManager extends PlaceholderExpansion {
 
 	@Override
 	public String onPlaceholderRequest(Player player, String id) {
-		if (player == null) {
-			return null;
-		}
+		if (player == null) return null;
 
-		User user = plugin.getUserManager().getUser(player);
+		final User user = plugin.getUserManager().getUser(player);
 
 		switch (id.toLowerCase()) {
 			case "kills":
@@ -89,12 +87,10 @@ public class PlaceholderManager extends PlaceholderExpansion {
 	}
 
 	private String handleArenaPlaceholderRequest(String id) {
-		String[] data = id.split(":");
-		Arena arena = ArenaRegistry.getArena(data[0]);
+		final String[] data = id.split(":");
+		final Arena arena = ArenaRegistry.getArena(data[0]);
 
-		if (arena == null) {
-			return null;
-		}
+		if (arena == null) return null;
 
 		switch (data[1].toLowerCase()) {
 			case "players":
@@ -106,7 +102,7 @@ public class PlaceholderManager extends PlaceholderExpansion {
 			case "formatted_timer":
 				return StringFormatUtils.formatIntoMMSS(arena.getTimer());
 			case "state":
-				return String.valueOf(arena.getArenaState());
+				return arena.getArenaState().name();
 			case "state_pretty":
 				return arena.getArenaState().getFormattedName();
 			case "map_name":

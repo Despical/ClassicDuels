@@ -23,7 +23,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 /**
  * @author Despical
- * @since 1.0.0
  * <p>
  * Created at 13.10.2020
  */
@@ -46,7 +45,5 @@ public class PermissionManager {
 
 	private static void setupPermissions() {
 		PermissionManager.setJoinPerm(plugin.getConfig().getString("Basic-Permissions.Join-Permission", "cd.join.<arena>"));
-
-		Debugger.debug("Basic permissions registered");
 	}
 }

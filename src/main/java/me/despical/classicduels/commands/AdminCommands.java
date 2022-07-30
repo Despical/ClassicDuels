@@ -1,4 +1,4 @@
-package me.despical.classicduels.commands.admin;
+package me.despical.classicduels.commands;
 
 import me.despical.classicduels.ConfigPreferences;
 import me.despical.classicduels.Main;
@@ -74,11 +74,11 @@ public class AdminCommands {
 
 			createInstanceInConfig(name);
 
-			arguments.sendMessage(chatManager.colorRawMessage("&l--------------------------------------------"));
+			arguments.sendMessage(chatManager.coloredRawMessage("&l--------------------------------------------"));
 			MiscUtils.sendCenteredMessage(player, "&eArena " + name + " created!");
 			arguments.sendMessage("");
 			MiscUtils.sendCenteredMessage(player, "&aEdit this arena via " + "&l/cd edit " + name + "&a!");
-			arguments.sendMessage(chatManager.colorRawMessage("&l--------------------------------------------"));
+			arguments.sendMessage(chatManager.coloredRawMessage("&l--------------------------------------------"));
 
 		}
 	}
@@ -221,7 +221,7 @@ public class AdminCommands {
 	)
 	public void helpCommand(CommandArguments arguments) {
 		arguments.sendMessage("");
-		arguments.sendMessage(plugin.getChatManager().colorRawMessage("&3&l---- Classic Duels Admin Commands ----"));
+		arguments.sendMessage(plugin.getChatManager().coloredRawMessage("&3&l---- Classic Duels Admin Commands ----"));
 		arguments.sendMessage("");
 
 		Player player = arguments.getSender();

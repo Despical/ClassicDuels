@@ -25,7 +25,6 @@ import me.despical.classicduels.arena.ArenaUtils;
 import me.despical.classicduels.events.*;
 import me.despical.classicduels.events.spectator.SpectatorEvents;
 import me.despical.classicduels.events.spectator.SpectatorItemEvents;
-import me.despical.classicduels.handlers.BungeeManager;
 import me.despical.classicduels.handlers.ChatManager;
 import me.despical.classicduels.handlers.PermissionManager;
 import me.despical.classicduels.handlers.PlaceholderManager;
@@ -65,7 +64,6 @@ public class Main extends JavaPlugin {
 	private boolean forceDisable;
 
 	private ExceptionLogHandler exceptionLogHandler;
-	private BungeeManager bungeeManager;
 	private RewardsFactory rewardsFactory;
 	private MysqlDatabase database;
 	private SignManager signManager;
@@ -78,25 +76,24 @@ public class Main extends JavaPlugin {
 
 	@Override
 	public void onEnable() {
+		configPreferences = new ConfigPreferences(this);
+
 		if (forceDisable = !validateIfPluginShouldStart()) {
 			getServer().getPluginManager().disablePlugin(this);
 			return;
 		}
 
 		if (getDescription().getVersion().contains("debug") || getConfig().getBoolean("Debug-Messages")) {
-			LogUtils.setLoggerName("CD");
+			LogUtils.setLoggerName("ClassicDuels");
 			LogUtils.enableLogging();
-
-			getServer().getLogger().setParent(LogUtils.getLogger());
+			LogUtils.log("Initialization started!");
 		}
 
-		configPreferences = new ConfigPreferences(this);
 		exceptionLogHandler = new ExceptionLogHandler(this);
 		exceptionLogHandler.setMainPackage("me.despical");
 		exceptionLogHandler.addBlacklistedClass("me.despical.classicduels.user.data.MysqlManager", "me.despical.commons.database.MysqlDatabase");
-		exceptionLogHandler.setRecordMessage("[CD] We have found a bug in the code. Use our issue tracker on our GitHub repo with the following error given above or you can join our Discord server (https://discord.gg/rVkaGmyszE)");
+		exceptionLogHandler.setRecordMessage("[ClassicDuels] We have found a bug in the code. Use our issue tracker on our GitHub repo with the following error given above or you can join our Discord server (https://discord.gg/rVkaGmyszE)");
 
-		LogUtils.log("Initialization started!");
 		long start = System.currentTimeMillis();
 
 		setupFiles();
@@ -112,21 +109,21 @@ public class Main extends JavaPlugin {
 
 	private boolean validateIfPluginShouldStart() {
 		if (!VersionResolver.isCurrentBetween(VersionResolver.ServerVersion.v1_8_R1, VersionResolver.ServerVersion.v1_19_R1)) {
-			LogUtils.sendConsoleMessage("&cYour server version is not supported by Classic Duels!");
-			LogUtils.sendConsoleMessage("&cSadly, we must shut off. Maybe you consider changing your server version?");
+			LogUtils.sendConsoleMessage("[ClassicDuels] &cYour server version is not supported by Classic Duels!");
+			LogUtils.sendConsoleMessage("[ClassicDuels] &cSadly, we must shut off. Maybe you consider changing your server version?");
 			return false;
 		}
 
 		if (!configPreferences.getOption(ConfigPreferences.Option.IGNORE_WARNING_MESSAGES) && JavaVersion.getCurrentVersion().isAt(JavaVersion.JAVA_8)) {
-			LogUtils.sendConsoleMessage("[KOTLP] &cThis plugin won't support Java 8 in future updates.");
-			LogUtils.sendConsoleMessage("[KOTLP] &cSo, maybe consider to update your version, right?");
+			LogUtils.sendConsoleMessage("[ClassicDuels] &cThis plugin won't support Java 8 in future updates.");
+			LogUtils.sendConsoleMessage("[ClassicDuels] &cSo, maybe consider to update your version, right?");
 		}
 
 		try {
 			Class.forName("org.spigotmc.SpigotConfig");
 		} catch (Exception e) {
-			LogUtils.sendConsoleMessage("&cYour server software is not supported by Classic Duels!");
-			LogUtils.sendConsoleMessage("&cWe support only Spigot and Spigot forks only! Shutting off...");
+			LogUtils.sendConsoleMessage("[ClassicDuels] &cYour server software is not supported by Classic Duels!");
+			LogUtils.sendConsoleMessage("[ClassicDuels] &cWe support only Spigot and Spigot forks only! Shutting off...");
 			return false;
 		}
 
@@ -153,8 +150,8 @@ public class Main extends JavaPlugin {
 			for (Player player : arena.getPlayers()) {
 				arena.doBarAction(Arena.BarAction.REMOVE, player);
 				arena.teleportToEndLocation(player);
-				player.setFlySpeed(0.1f);
-				player.setWalkSpeed(0.2f);
+				player.setFlySpeed(.1F);
+				player.setWalkSpeed(.2F);
 
 				if (configPreferences.getOption(ConfigPreferences.Option.INVENTORY_MANAGER_ENABLED)) {
 					InventorySerializer.loadInventory(this, player);
@@ -175,10 +172,6 @@ public class Main extends JavaPlugin {
 	private void initializeClasses() {
 		ScoreboardLib.setPluginInstance(this);
 		chatManager = new ChatManager(this);
-
-		if (configPreferences.getOption(ConfigPreferences.Option.BUNGEE_ENABLED)) {
-			bungeeManager = new BungeeManager(this);
-		}
 
 		if (configPreferences.getOption(ConfigPreferences.Option.DATABASE_ENABLED)) {
 			database = new MysqlDatabase(this, "mysql");
@@ -241,9 +234,9 @@ public class Main extends JavaPlugin {
 
 		UpdateChecker.init(this, 85356).requestUpdateCheck().whenComplete((result, exception) -> {
 			if (result.requiresUpdate()) {
-				LogUtils.sendConsoleMessage("[CD] Found a new version available: v" + result.getNewestVersion());
-				LogUtils.sendConsoleMessage("[CD] Download it on SpigotMC:");
-				LogUtils.sendConsoleMessage("[CD] https://www.spigotmc.org/resources/classic-duels-1-9-1-16-5.85356/");
+				LogUtils.sendConsoleMessage("[ClassicDuels] Found a new version available: v" + result.getNewestVersion());
+				LogUtils.sendConsoleMessage("[ClassicDuels] Download it on SpigotMC:");
+				LogUtils.sendConsoleMessage("[ClassicDuels] https://www.spigotmc.org/resources/classic-duels-1-9-1-16-5.85356/");
 			}
 		});
 	}
@@ -254,10 +247,6 @@ public class Main extends JavaPlugin {
 
 	public RewardsFactory getRewardsFactory() {
 		return rewardsFactory;
-	}
-
-	public BungeeManager getBungeeManager() {
-		return bungeeManager;
 	}
 
 	public ConfigPreferences getConfigPreferences() {
@@ -290,25 +279,26 @@ public class Main extends JavaPlugin {
 
 	private void saveAllUserStatistics() {
 		for (Player player : getServer().getOnlinePlayers()) {
-			User user = userManager.getUser(player);
+			final User user = userManager.getUser(player);
 
 			if (userManager.getDatabase() instanceof MysqlManager) {
-				StringBuilder update = new StringBuilder(" SET ");
+				final StringBuilder builder = new StringBuilder(" SET ");
 
 				for (StatsStorage.StatisticType stat : StatsStorage.StatisticType.values()) {
 					if (!stat.isPersistent()) continue;
-					int val = user.getStat(stat);
 
-					if (update.toString().equalsIgnoreCase(" SET ")) {
-						update.append(stat.getName()).append("'='").append(val);
+					final int value = user.getStat(stat);
+
+					if (builder.toString().equalsIgnoreCase(" SET ")) {
+						builder.append(stat.getName()).append("'='").append(value);
 					}
 
-					update.append(", ").append(stat.getName()).append("'='").append(val);
+					builder.append(", ").append(stat.getName()).append("'='").append(value);
 				}
 
-				String finalUpdate = update.toString();
-				MysqlManager database = ((MysqlManager) userManager.getDatabase());
-				database.getDatabase().executeUpdate("UPDATE " + database.getTableName() + finalUpdate + " WHERE UUID='" + user.getUniqueId().toString() + "';");
+				final String update = builder.toString();
+				final MysqlManager database = ((MysqlManager) userManager.getDatabase());
+				database.getDatabase().executeUpdate("UPDATE " + database.getTableName() + update + " WHERE UUID='" + user.getUniqueId().toString() + "';");
 				continue;
 			}
 
