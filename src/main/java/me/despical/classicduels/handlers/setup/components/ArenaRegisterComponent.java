@@ -24,10 +24,10 @@ import me.despical.classicduels.arena.ArenaRegistry;
 import me.despical.classicduels.arena.ArenaState;
 import me.despical.classicduels.handlers.setup.SetupInventory;
 import me.despical.classicduels.handlers.sign.ArenaSign;
-import me.despical.commonsbox.compat.XMaterial;
-import me.despical.commonsbox.configuration.ConfigUtils;
-import me.despical.commonsbox.item.ItemBuilder;
-import me.despical.commonsbox.serializer.LocationSerializer;
+import me.despical.commons.compat.XMaterial;
+import me.despical.commons.configuration.ConfigUtils;
+import me.despical.commons.item.ItemBuilder;
+import me.despical.commons.serializer.LocationSerializer;
 import me.despical.inventoryframework.GuiItem;
 import me.despical.inventoryframework.pane.StaticPane;
 import org.bukkit.Bukkit;
@@ -43,7 +43,6 @@ import java.util.List;
 
 /**
  * @author Despical
- * @since 1.0.0
  * <p>
  * Created at 02.07.2020
  */
@@ -85,20 +84,20 @@ public class ArenaRegisterComponent implements SetupComponent {
 			e.getWhoClicked().closeInventory();
 
 			if (arena.isReady()) {
-				e.getWhoClicked().sendMessage(plugin.getChatManager().colorRawMessage("&a&l✔ &aThis arena was already validated and is ready to use!"));
+				e.getWhoClicked().sendMessage(plugin.getChatManager().coloredRawMessage("&a&l✔ &aThis arena was already validated and is ready to use!"));
 				return;
 			}
 
 			String[] locations = {"endlocation", "firstplayerlocation", "secondplayerlocation", "areaMin", "areaMax"};
 
 			for (String loc : locations) {
-				if (!config.isSet(s + loc) || config.getString(s + loc).equals(LocationSerializer.locationToString(Bukkit.getWorlds().get(0).getSpawnLocation()))) {
-					e.getWhoClicked().sendMessage(plugin.getChatManager().colorRawMessage("&c&l✘ &cArena validation failed! Please configure following spawn properly: " + loc + " (cannot be world spawn location)"));
+				if (!config.isSet(s + loc) || config.getString(s + loc).equals(LocationSerializer.toString(Bukkit.getWorlds().get(0).getSpawnLocation()))) {
+					e.getWhoClicked().sendMessage(plugin.getChatManager().coloredRawMessage("&c&l✘ &cArena validation failed! Please configure following spawn properly: " + loc + " (cannot be world spawn location)"));
 					return;
 				}
 			}
 
-			e.getWhoClicked().sendMessage(plugin.getChatManager().colorRawMessage("&a&l✔ &aValidation succeeded! Registering new arena instance: " + arena.getId()));
+			e.getWhoClicked().sendMessage(plugin.getChatManager().coloredRawMessage("&a&l✔ &aValidation succeeded! Registering new arena instance: " + arena.getId()));
 			config.set(s + "isdone", true);
 			ConfigUtils.saveConfig(plugin, config, "arenas");
 
@@ -114,9 +113,9 @@ public class ArenaRegisterComponent implements SetupComponent {
 			arena.setArenaState(ArenaState.WAITING_FOR_PLAYERS);
 			arena.setReady(true);
 			arena.setMapName(config.getString(s + "mapname"));
-			arena.setFirstPlayerLocation(LocationSerializer.locationFromString(config.getString(s + "firstplayerlocation")));
-			arena.setSecondPlayerLocation(LocationSerializer.locationFromString(config.getString(s + "secondplayerlocation")));
-			arena.setEndLocation(LocationSerializer.locationFromString(config.getString(s + "endlocation")));
+			arena.setFirstPlayerLocation(LocationSerializer.fromString(config.getString(s + "firstplayerlocation")));
+			arena.setSecondPlayerLocation(LocationSerializer.fromString(config.getString(s + "secondplayerlocation")));
+			arena.setEndLocation(LocationSerializer.fromString(config.getString(s + "endlocation")));
 
 			ArenaRegistry.registerArena(arena);
 			arena.start();

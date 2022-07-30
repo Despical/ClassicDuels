@@ -278,17 +278,6 @@ public class Arena extends BukkitRunnable {
 
 				clearArea();
 
-				if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BUNGEE_ENABLED)) {
-					ArenaRegistry.shuffleBungeeArena();
-
-//					Arena bungeeArena = ArenaRegistry.getBungeeArena(); no method yet
-					Arena bungeeArena = null;
-
-					for (Player player : plugin.getServer().getOnlinePlayers()) {
-						ArenaManager.joinAttempt(player, bungeeArena);
-					}
-				}
-
 				if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BOSS_BAR_ENABLED)) {
 					gameBar.setTitle(plugin.getChatManager().message("boss_bar.waiting_for_players"));
 				}
@@ -446,11 +435,6 @@ public class Arena extends BukkitRunnable {
 	}
 
 	public void teleportAllToEndLocation() {
-		if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BUNGEE_ENABLED) && ConfigUtils.getConfig(plugin, "bungee").getBoolean("End-Location-Hub", true)) {
-			players.forEach(plugin.getBungeeManager()::connectToHub);
-			return;
-		}
-
 		Location location = getEndLocation();
 
 		if (location == null) {
@@ -466,11 +450,6 @@ public class Arena extends BukkitRunnable {
 	}
 
 	public void teleportToEndLocation(Player player) {
-		if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BUNGEE_ENABLED) && ConfigUtils.getConfig(plugin, "bungee").getBoolean("End-Location-Hub", true)) {
-			plugin.getBungeeManager().connectToHub(player);
-			return;
-		}
-
 		Location location = getEndLocation();
 
 		if (location == null) {

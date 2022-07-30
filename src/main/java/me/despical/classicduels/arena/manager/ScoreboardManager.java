@@ -62,7 +62,7 @@ public class ScoreboardManager {
 
 			@Override
 			public String getTitle(Player player) {
-				return plugin.getChatManager().colorMessage("Scoreboard.Title");
+				return plugin.getChatManager().message("Scoreboard.Title");
 			}
 
 			@Override

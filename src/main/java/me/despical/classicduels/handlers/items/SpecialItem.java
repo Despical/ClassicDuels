@@ -19,8 +19,8 @@
 package me.despical.classicduels.handlers.items;
 
 import me.despical.classicduels.Main;
-import me.despical.commonsbox.compat.XMaterial;
-import me.despical.commonsbox.configuration.ConfigUtils;
+import me.despical.commons.compat.XMaterial;
+import me.despical.commons.configuration.ConfigUtils;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
@@ -68,9 +68,9 @@ public class SpecialItem {
 		ConfigUtils.saveConfig(plugin, config, "items");
 		ItemStack stack = XMaterial.matchXMaterial(config.getString(name + ".material-name", "STONE").toUpperCase()).orElse(XMaterial.STONE).parseItem();
 		ItemMeta meta = stack.getItemMeta();
-		meta.setDisplayName(plugin.getChatManager().colorRawMessage(config.getString(name + ".displayname")));
+		meta.setDisplayName(plugin.getChatManager().coloredRawMessage(config.getString(name + ".displayname")));
 
-		List<String> colorizedLore = config.getStringList(name + ".lore").stream().map(plugin.getChatManager()::colorRawMessage).collect(Collectors.toList());
+		List<String> colorizedLore = config.getStringList(name + ".lore").stream().map(plugin.getChatManager()::coloredRawMessage).collect(Collectors.toList());
 
 		meta.setLore(colorizedLore);
 		stack.setItemMeta(meta);

@@ -21,22 +21,20 @@ package me.despical.classicduels.handlers.rewards;
 import me.despical.classicduels.Main;
 import me.despical.classicduels.arena.Arena;
 import me.despical.classicduels.arena.ArenaRegistry;
-import me.despical.commonsbox.configuration.ConfigUtils;
-import me.despical.commonsbox.engine.ScriptEngine;
+import me.despical.commons.configuration.ConfigUtils;
+import me.despical.commons.engine.ScriptEngine;
+import me.despical.commons.util.LogUtils;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * @author Despical
- * @since 1.0.0
  * <p>
  * Created at 11.10.2020
  */
@@ -120,22 +118,15 @@ public class RewardsFactory {
 			return;
 		}
 
-		Debugger.debug("[RewardsFactory] Starting rewards registration");
+		LogUtils.log("[RewardsFactory] Starting rewards registration");
 		long start = System.currentTimeMillis();
-
-		Map<Reward.RewardType, Integer> registeredRewards = new HashMap<>();
 
 		for (Reward.RewardType rewardType : Reward.RewardType.values()) {
 			for (String reward : config.getStringList("rewards." + rewardType.getPath())) {
 				rewards.add(new Reward(rewardType, reward));
-				registeredRewards.put(rewardType, registeredRewards.getOrDefault(rewardType, 0) + 1);
 			}
 		}
 
-		for (Reward.RewardType rewardType : registeredRewards.keySet()) {
-			Debugger.debug("[RewardsFactory] Registered {0} {1} rewards!", registeredRewards.get(rewardType), rewardType.name());
-		}
-
-		Debugger.debug("[RewardsFactory] Registered all rewards took {0} ms", System.currentTimeMillis() - start);
+		LogUtils.log("[RewardsFactory] Registered all rewards took {0} ms", System.currentTimeMillis() - start);
 	}
 }

@@ -23,10 +23,11 @@ import me.despical.classicduels.arena.Arena;
 import me.despical.classicduels.arena.ArenaManager;
 import me.despical.classicduels.arena.ArenaRegistry;
 import me.despical.classicduels.arena.ArenaState;
-import me.despical.commonsbox.compat.VersionResolver;
-import me.despical.commonsbox.compat.XMaterial;
-import me.despical.commonsbox.configuration.ConfigUtils;
-import me.despical.commonsbox.serializer.LocationSerializer;
+import me.despical.commons.compat.VersionResolver;
+import me.despical.commons.compat.XMaterial;
+import me.despical.commons.configuration.ConfigUtils;
+import me.despical.commons.serializer.LocationSerializer;
+import me.despical.commons.util.LogUtils;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -44,7 +45,6 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 
 /**
  * @author Despical
@@ -64,12 +64,12 @@ public class SignManager implements Listener {
 		this.plugin = plugin;
 		this.config = ConfigUtils.getConfig(plugin, "arenas");
 
-		gameStateToString.put(ArenaState.WAITING_FOR_PLAYERS, plugin.getChatManager().colorMessage("Signs.Game-States.Waiting"));
-		gameStateToString.put(ArenaState.STARTING, plugin.getChatManager().colorMessage("Signs.Game-States.Starting"));
-		gameStateToString.put(ArenaState.IN_GAME, plugin.getChatManager().colorMessage("Signs.Game-States.In-Game"));
-		gameStateToString.put(ArenaState.ENDING, plugin.getChatManager().colorMessage("Signs.Game-States.Ending"));
-		gameStateToString.put(ArenaState.RESTARTING, plugin.getChatManager().colorMessage("Signs.Game-States.Restarting"));
-		gameStateToString.put(ArenaState.INACTIVE, plugin.getChatManager().colorMessage("Signs.Game-States.Inactive"));
+		gameStateToString.put(ArenaState.WAITING_FOR_PLAYERS, plugin.getChatManager().message("Signs.Game-States.Waiting"));
+		gameStateToString.put(ArenaState.STARTING, plugin.getChatManager().message("Signs.Game-States.Starting"));
+		gameStateToString.put(ArenaState.IN_GAME, plugin.getChatManager().message("Signs.Game-States.In-Game"));
+		gameStateToString.put(ArenaState.ENDING, plugin.getChatManager().message("Signs.Game-States.Ending"));
+		gameStateToString.put(ArenaState.RESTARTING, plugin.getChatManager().message("Signs.Game-States.Restarting"));
+		gameStateToString.put(ArenaState.INACTIVE, plugin.getChatManager().message("Signs.Game-States.Inactive"));
 		signLines = plugin.getChatManager().getStringList("Signs.Lines");
 
 		plugin.getServer().getPluginManager().registerEvents(this, plugin);
@@ -82,14 +82,14 @@ public class SignManager implements Listener {
 		}
 
 		if (e.getLine(1).isEmpty()) {
-			e.getPlayer().sendMessage(plugin.getChatManager().getPrefix() + plugin.getChatManager().colorMessage("Signs.Please-Type-Arena-Name"));
+			e.getPlayer().sendMessage(plugin.getChatManager().prefixedMessage("Signs.Please-Type-Arena-Name"));
 			return;
 		}
 
 		Arena arena = ArenaRegistry.getArena(e.getLine(1));
 
 		if (arena == null) {
-			e.getPlayer().sendMessage(plugin.getChatManager().getPrefix() + plugin.getChatManager().colorMessage("Signs.Arena-Doesnt-Exists"));
+			e.getPlayer().sendMessage(plugin.getChatManager().message("Signs.Arena-Doesnt-Exists"));
 			return;
 		}
 
@@ -99,9 +99,9 @@ public class SignManager implements Listener {
 			e.setLine(i, formatSign(signLines.get(i), arena));
 		}
 
-		e.getPlayer().sendMessage(plugin.getChatManager().getPrefix() + plugin.getChatManager().colorMessage("Signs.Sign-Created"));
+		e.getPlayer().sendMessage(plugin.getChatManager().message("Signs.Sign-Created"));
 
-		String location = LocationSerializer.locationToString(e.getBlock().getLocation());
+		String location = LocationSerializer.toString(e.getBlock().getLocation());
 		List<String> locs = config.getStringList("instances." + arena.getId() + ".signs");
 		locs.add(location);
 
@@ -119,13 +119,13 @@ public class SignManager implements Listener {
 
 		if (!e.getPlayer().hasPermission("classicduels.admin.sign.break")) {
 			e.setCancelled(true);
-			e.getPlayer().sendMessage(plugin.getChatManager().getPrefix() + plugin.getChatManager().colorMessage("Signs.Doesnt-Have-Permission"));
+			e.getPlayer().sendMessage(plugin.getChatManager().message("Signs.Doesnt-Have-Permission"));
 			return;
 		}
 
 		arenaSigns.remove(arenaSign);
 
-		String location = LocationSerializer.locationToString(e.getBlock().getLocation());
+		String location = LocationSerializer.toString(e.getBlock().getLocation());
 
 		for (String arena : config.getConfigurationSection("instances").getKeys(false)) {
 			for (String sign : config.getStringList("instances." + arena + ".signs")) {
@@ -138,12 +138,12 @@ public class SignManager implements Listener {
 
 				config.set("instances." + arena + ".signs", signs);
 				ConfigUtils.saveConfig(plugin, config, "arenas");
-				e.getPlayer().sendMessage(plugin.getChatManager().getPrefix() + plugin.getChatManager().colorMessage("Signs.Sign-Removed"));
+				e.getPlayer().sendMessage(plugin.getChatManager().message("Signs.Sign-Removed"));
 				return;
 			}
 		}
 
-		e.getPlayer().sendMessage(plugin.getChatManager().getPrefix() + plugin.getChatManager().colorRawMessage("&cCouldn't remove sign from configuration! Please do this manually!"));
+		e.getPlayer().sendMessage(plugin.getChatManager().message("&cCouldn't remove sign from configuration! Please do this manually!"));
 	}
 
 	private String formatSign(String msg, Arena a) {
@@ -151,14 +151,13 @@ public class SignManager implements Listener {
 		formatted = StringUtils.replace(formatted, "%mapname%", a.getMapName());
 
 		if (a.getPlayers().size() == 2) {
-			formatted = StringUtils.replace(formatted, "%state%", plugin.getChatManager().colorMessage("Signs.Game-States.Full-Game"));
+			formatted = StringUtils.replace(formatted, "%state%", plugin.getChatManager().message("Signs.Game-States.Full-Game"));
 		} else {
 			formatted = StringUtils.replace(formatted, "%state%", gameStateToString.get(a.getArenaState()));
 		}
 
 		formatted = StringUtils.replace(formatted, "%players%", String.valueOf(a.getPlayers().size()));
-		formatted = plugin.getChatManager().colorRawMessage(formatted);
-		return formatted;
+		return plugin.getChatManager().coloredRawMessage(formatted);
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)
@@ -191,28 +190,28 @@ public class SignManager implements Listener {
 	}
 
 	public void loadSigns() {
-		Debugger.debug("Sign loading started");
+		LogUtils.log("Sign loading started!");
 		long start = System.currentTimeMillis();
 
 		arenaSigns.clear();
 
 		for (String path : config.getConfigurationSection("instances").getKeys(false)) {
 			for (String sign : config.getStringList("instances." + path + ".signs")) {
-				Location loc = LocationSerializer.locationFromString(sign);
+				Location loc = LocationSerializer.fromString(sign);
 
 				if (loc.getBlock().getState() instanceof Sign) {
 					arenaSigns.add(new ArenaSign((Sign) loc.getBlock().getState(), ArenaRegistry.getArena(path)));
 				} else {
-					Debugger.debug(Level.WARNING, "Block at location {0} for arena {1} not a sign!", loc, path);
+					LogUtils.log("Block at location {0} for arena {1} not a sign!", loc, path);
 				}
 			}
 		}
 
-		Debugger.debug("Sign load event finished took {0} ms", System.currentTimeMillis() - start);
+		LogUtils.log("Sign load event finished took {0} ms", System.currentTimeMillis() - start);
 	}
 
 	public void updateSigns() {
-		Debugger.performance("SignUpdate", "[PerformanceMonitor] [SignUpdate] Updating signs");
+		LogUtils.log("Updating signs");
 		long start = System.currentTimeMillis();
 
 		for (ArenaSign arenaSign : arenaSigns) {
@@ -284,7 +283,7 @@ public class SignManager implements Listener {
 			sign.update();
 		}
 
-		Debugger.performance("SignUpdate", "[PerformanceMonitor] [SignUpdate] Updated signs took {0} ms", System.currentTimeMillis() - start);
+		LogUtils.log("[SignUpdate] Updated signs took {0} ms.", System.currentTimeMillis() - start);
 	}
 
 	public List<ArenaSign> getArenaSigns() {

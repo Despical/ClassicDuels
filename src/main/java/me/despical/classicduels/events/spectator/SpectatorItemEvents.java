@@ -21,9 +21,9 @@ package me.despical.classicduels.events.spectator;
 import me.despical.classicduels.Main;
 import me.despical.classicduels.arena.Arena;
 import me.despical.classicduels.arena.ArenaRegistry;
-import me.despical.commonsbox.compat.XMaterial;
-import me.despical.commonsbox.item.ItemUtils;
-import me.despical.commonsbox.number.NumberUtils;
+import me.despical.commons.compat.XMaterial;
+import me.despical.commons.item.ItemUtils;
+import me.despical.commons.number.NumberUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.SkullType;
 import org.bukkit.World;
@@ -72,16 +72,16 @@ public class SpectatorItemEvents implements Listener {
 
 			e.setCancelled(true);
 
-			if (stack.getItemMeta().getDisplayName().equalsIgnoreCase(plugin.getChatManager().colorMessage("In-Game.Spectator.Spectator-Item-Name"))) {
+			if (stack.getItemMeta().getDisplayName().equalsIgnoreCase(plugin.getChatManager().message("In-Game.Spectator.Spectator-Item-Name"))) {
 				openSpectatorMenu(e.getPlayer().getWorld(), e.getPlayer());
-			} else if (stack.getItemMeta().getDisplayName().equalsIgnoreCase(plugin.getChatManager().colorMessage("In-Game.Spectator.Settings-Menu.Item-Name"))) {
+			} else if (stack.getItemMeta().getDisplayName().equalsIgnoreCase(plugin.getChatManager().message("In-Game.Spectator.Settings-Menu.Item-Name"))) {
 				new SpectatorSettingsMenu(e.getPlayer()).openInventory();
 			}
 		}
 	}
 
 	private void openSpectatorMenu(World world, Player p) {
-		Inventory inventory = plugin.getServer().createInventory(null, NumberUtils.serializeInt(ArenaRegistry.getArena(p).getPlayers().size()), plugin.getChatManager().colorMessage("In-Game.Spectator.Spectator-Menu-Name"));
+		Inventory inventory = plugin.getServer().createInventory(null, NumberUtils.roundInteger(9, ArenaRegistry.getArena(p).getPlayers().size()), plugin.getChatManager().message("In-Game.Spectator.Spectator-Menu-Name"));
 		List<Player> players = ArenaRegistry.getArena(p).getPlayers();
 
 		for (Player player : world.getPlayers()) {
@@ -114,7 +114,7 @@ public class SpectatorItemEvents implements Listener {
 			return;
 		}
 
-		if (!e.getView().getTitle().equalsIgnoreCase(plugin.getChatManager().colorMessage("In-Game.Spectator.Spectator-Menu-Name", p))) {
+		if (!e.getView().getTitle().equalsIgnoreCase(plugin.getChatManager().message("In-Game.Spectator.Spectator-Menu-Name", p))) {
 			return;
 		}
 
@@ -123,13 +123,13 @@ public class SpectatorItemEvents implements Listener {
 
 		for (Player player : arena.getPlayers()) {
 			if (player.getName().equalsIgnoreCase(meta.getDisplayName()) || ChatColor.stripColor(meta.getDisplayName()).contains(player.getName())) {
-				p.sendMessage(plugin.getChatManager().getPrefix() + plugin.getChatManager().formatMessage(arena, plugin.getChatManager().colorMessage("Commands.Admin-Commands.Teleported-To-Player"), player));
+				p.sendMessage(plugin.getChatManager().formatMessage(arena, plugin.getChatManager().prefixedMessage("Commands.Admin-Commands.Teleported-To-Player"), player));
 				p.teleport(player);
 				p.closeInventory();
 				return;
 			}
 		}
 
-		p.sendMessage(plugin.getChatManager().getPrefix() + plugin.getChatManager().colorMessage("Commands.Admin-Commands.Player-Not-Found"));
+		p.sendMessage(plugin.getChatManager().prefixedMessage("Commands.Admin-Commands.Player-Not-Found"));
 	}
 }

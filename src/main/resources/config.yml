@@ -27,11 +27,6 @@ Hit-Cooldown-Delay: 16
 # This is how many times can flint and steel be used in game.
 FNS-Durability: 5
 
-# Should we hook into bungee-cord? (If you wanna use arena per server option)
-# You STILL need to use external addon for HUB server game signs
-# Classic Duels doesn't offer that addon.
-BungeeActivated: false
-
 # Enable this option when you're using MySQL, otherwise it won't work.
 # Be careful when changing this because there is NO migrator between
 # flat file and MySQL for player stats.

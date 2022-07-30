@@ -22,10 +22,10 @@ import me.despical.classicduels.Main;
 import me.despical.classicduels.arena.Arena;
 import me.despical.classicduels.handlers.setup.SetupInventory;
 import me.despical.classicduels.utils.CuboidSelector;
-import me.despical.commonsbox.compat.XMaterial;
-import me.despical.commonsbox.configuration.ConfigUtils;
-import me.despical.commonsbox.item.ItemBuilder;
-import me.despical.commonsbox.serializer.LocationSerializer;
+import me.despical.commons.compat.XMaterial;
+import me.despical.commons.configuration.ConfigUtils;
+import me.despical.commons.item.ItemBuilder;
+import me.despical.commons.serializer.LocationSerializer;
 import me.despical.inventoryframework.GuiItem;
 import me.despical.inventoryframework.pane.StaticPane;
 import org.bukkit.Material;
@@ -34,7 +34,6 @@ import org.bukkit.entity.Player;
 
 /**
  * @author Despical
- * @since 1.0.0
  * <p>
  * Created at 12.10.2020
  */
@@ -53,7 +52,7 @@ public class SpawnComponents implements SetupComponent {
 		FileConfiguration config = setupInventory.getConfig();
 		Arena arena = setupInventory.getArena();
 		Main plugin = setupInventory.getPlugin();
-		String serializedLocation = LocationSerializer.locationToString(player.getLocation());
+		String serializedLocation = LocationSerializer.toString(player.getLocation());
 		String s = "instances." + arena.getId() + ".";
 
 		pane.addItem(new GuiItem(new ItemBuilder(Material.REDSTONE_BLOCK)
@@ -68,7 +67,7 @@ public class SpawnComponents implements SetupComponent {
 			e.getWhoClicked().closeInventory();
 			config.set(s + "firstplayerlocation", serializedLocation);
 			arena.setEndLocation(player.getLocation());
-			player.sendMessage(plugin.getChatManager().colorRawMessage("&e✔ Completed | &aFirst player's location for arena " + arena.getId() + " set at your location!"));
+			player.sendMessage(plugin.getChatManager().coloredRawMessage("&e✔ Completed | &aFirst player's location for arena " + arena.getId() + " set at your location!"));
 			ConfigUtils.saveConfig(plugin, config, "arenas");
 		}), 0, 0);
 
@@ -84,7 +83,7 @@ public class SpawnComponents implements SetupComponent {
 			e.getWhoClicked().closeInventory();
 			config.set(s + "secondplayerlocation", serializedLocation);
 			arena.setEndLocation(player.getLocation());
-			player.sendMessage(plugin.getChatManager().colorRawMessage("&e✔ Completed | &aSecond player's location for arena " + arena.getId() + " set at your location!"));
+			player.sendMessage(plugin.getChatManager().coloredRawMessage("&e✔ Completed | &aSecond player's location for arena " + arena.getId() + " set at your location!"));
 			ConfigUtils.saveConfig(plugin, config, "arenas");
 		}), 1, 0);
 
@@ -100,7 +99,7 @@ public class SpawnComponents implements SetupComponent {
 			e.getWhoClicked().closeInventory();
 			config.set(s + "endlocation", serializedLocation);
 			arena.setEndLocation(player.getLocation());
-			player.sendMessage(plugin.getChatManager().colorRawMessage("&e✔ Completed | &aEnding location for arena " + arena.getId() + " set at your location!"));
+			player.sendMessage(plugin.getChatManager().coloredRawMessage("&e✔ Completed | &aEnding location for arena " + arena.getId() + " set at your location!"));
 			ConfigUtils.saveConfig(plugin, config, "arenas");
 		}), 2, 0);
 
@@ -121,14 +120,14 @@ public class SpawnComponents implements SetupComponent {
 				return;
 			}
 
-			if (selection.getSecondPos() == null) {
-				player.sendMessage(plugin.getChatManager().colorRawMessage("&c&l✖ &cWarning | Please select top corner using right click!"));
+			if (selection.secondPos == null) {
+				player.sendMessage(plugin.getChatManager().coloredRawMessage("&c&l✖ &cWarning | Please select top corner using right click!"));
 				return;
 			}
 
-			config.set(s + "areaMin", LocationSerializer.locationToString(selection.getFirstPos()));
-			config.set(s + "areaMax", LocationSerializer.locationToString(selection.getSecondPos()));
-			player.sendMessage(plugin.getChatManager().colorRawMessage("&e✔ Completed | &aGame area of arena " + arena.getId() + " set as you selection!"));
+			config.set(s + "areaMin", LocationSerializer.toString(selection.firstPos));
+			config.set(s + "areaMax", LocationSerializer.toString(selection.secondPos));
+			player.sendMessage(plugin.getChatManager().coloredRawMessage("&e✔ Completed | &aGame area of arena " + arena.getId() + " set as you selection!"));
 			plugin.getCuboidSelector().removeSelection(player);
 
 			ConfigUtils.saveConfig(plugin, config, "arenas");

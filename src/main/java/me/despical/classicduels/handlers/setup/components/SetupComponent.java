@@ -23,7 +23,6 @@ import me.despical.inventoryframework.pane.StaticPane;
 
 /**
  * @author Despical
- * @since 1.0.0
  * <p>
  * Created at 11.10.2020
  */

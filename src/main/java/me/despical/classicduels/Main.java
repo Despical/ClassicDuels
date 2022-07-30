@@ -22,6 +22,9 @@ import me.despical.classicduels.api.StatsStorage;
 import me.despical.classicduels.arena.Arena;
 import me.despical.classicduels.arena.ArenaRegistry;
 import me.despical.classicduels.arena.ArenaUtils;
+import me.despical.classicduels.commands.AdminCommands;
+import me.despical.classicduels.commands.PlayerCommands;
+import me.despical.classicduels.commands.TabCompletion;
 import me.despical.classicduels.events.*;
 import me.despical.classicduels.events.spectator.SpectatorEvents;
 import me.despical.classicduels.events.spectator.SpectatorItemEvents;
@@ -185,12 +188,8 @@ public class Main extends JavaPlugin {
 		KitRegistry.registerBaseKit();
 
 		new SpectatorEvents(this);
-		new QuitEvent(this);
-		new JoinEvent(this);
 		new ChatEvents(this);
 		new Events(this);
-		new CraftEvents(this);
-		new LobbyEvent(this);
 		new SpectatorItemEvents(this);
 
 		signManager = new SignManager(this);
@@ -200,6 +199,10 @@ public class Main extends JavaPlugin {
 		rewardsFactory = new RewardsFactory(this);
 		commandFramework = new CommandFramework(this);
 		cuboidSelector = new CuboidSelector(this);
+
+		new AdminCommands(this);
+		new PlayerCommands(this);
+		new TabCompletion(this);
 
 		registerSoftDependencies();
 	}
@@ -225,7 +228,6 @@ public class Main extends JavaPlugin {
 		metrics.addCustomChart(new Metrics.SimplePie("locale_used", () -> languageManager.getPluginLocale().getPrefix()));
 		metrics.addCustomChart(new Metrics.SimplePie("database_enabled", () -> configPreferences.getOption(ConfigPreferences.Option.DATABASE_ENABLED) ? "Enabled" : "Disabled"));
 		metrics.addCustomChart(new Metrics.SimplePie("update_notifier", () -> configPreferences.getOption(ConfigPreferences.Option.UPDATE_NOTIFIER_ENABLED) ? "Enabled" : "Disabled"));
-		metrics.addCustomChart(new Metrics.SimplePie("bungeecord_hooked", () -> configPreferences.getOption(ConfigPreferences.Option.BUNGEE_ENABLED) ? "Enabled" : "Disabled"));
 
 	}
 
@@ -242,7 +244,7 @@ public class Main extends JavaPlugin {
 	}
 
 	private void setupFiles() {
-		Collections.streamOf("arenas", "bungee", "rewards", "stats", "items", "mysql", "messages").filter(name -> !new File(getDataFolder(),name + ".yml").exists()).forEach(name -> saveResource(name + ".yml", false));
+		Collections.streamOf("arenas", "rewards", "stats", "items", "mysql", "messages").filter(name -> !new File(getDataFolder(),name + ".yml").exists()).forEach(name -> saveResource(name + ".yml", false));
 	}
 
 	public RewardsFactory getRewardsFactory() {

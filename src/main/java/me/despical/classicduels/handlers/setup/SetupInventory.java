@@ -24,7 +24,7 @@ import me.despical.classicduels.handlers.ChatManager;
 import me.despical.classicduels.handlers.setup.components.ArenaRegisterComponent;
 import me.despical.classicduels.handlers.setup.components.MiscComponents;
 import me.despical.classicduels.handlers.setup.components.SpawnComponents;
-import me.despical.commonsbox.configuration.ConfigUtils;
+import me.despical.commons.configuration.ConfigUtils;
 import me.despical.inventoryframework.Gui;
 import me.despical.inventoryframework.pane.StaticPane;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -35,7 +35,6 @@ import java.util.Random;
 
 /**
  * @author Despical
- * @since 1.0.0
  * <p>
  * Created at 11.10.2020
  */
@@ -82,23 +81,23 @@ public class SetupInventory {
 
 	private void sendProTip(Player p) {
 		ChatManager chatManager = plugin.getChatManager();
-		int rand = random.nextInt(16 + 1);
+		int rand = random.nextInt(16);
 
 		switch (rand) {
 			case 0:
-				p.sendMessage(chatManager.colorRawMessage("&e&lTIP: &7We are open source! You can always help us by contributing! Check https://github.com/Despical/ClassicDuels"));
+				p.sendMessage(chatManager.coloredRawMessage("&e&lTIP: &7We are open source! You can always help us by contributing! Check https://github.com/Despical/ClassicDuels"));
 				break;
 			case 1:
-				p.sendMessage(chatManager.colorRawMessage("&e&lTIP: &7Need help? Join our discord server: https://discordapp.com/invite/Vhyy4HA"));
+				p.sendMessage(chatManager.coloredRawMessage("&e&lTIP: &7Need help? Join our discord server: https://discord.com/invite/rVkaGmyszE"));
 				break;
 			case 2:
-				p.sendMessage(chatManager.colorRawMessage("&e&lTIP: &7Need help? Check our wiki: https://github.com/Despical/ClassicDuels/wiki"));
+				p.sendMessage(chatManager.coloredRawMessage("&e&lTIP: &7Need help? Check our wiki: https://github.com/Despical/ClassicDuels/wiki"));
 				break;
 			case 3:
-				p.sendMessage(chatManager.colorRawMessage("&e&lTIP: &7Want to access exclusive maps, addons and more? Check our Patreon page: https://www.patreon.com/despical"));
+				p.sendMessage(chatManager.coloredRawMessage("&e&lTIP: &7Want to access exclusive maps, addons and more? Check our Patreon page: https://www.patreon.com/despical"));
 				break;
 			case 4:
-				p.sendMessage(chatManager.colorRawMessage("&e&lTIP: &7Help us translating plugin to your language here: https://github.com/Despical/LocaleStorage/"));
+				p.sendMessage(chatManager.coloredRawMessage("&e&lTIP: &7Help us translating plugin to your language here: https://github.com/Despical/LocaleStorage/"));
 				break;
 			default:
 				break;

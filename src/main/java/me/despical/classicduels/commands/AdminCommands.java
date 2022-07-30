@@ -24,7 +24,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -115,7 +114,7 @@ public class AdminCommands {
 	)
 	public void deleteCommand(CommandArguments arguments) {
 		if (arguments.isArgumentsEmpty()) {
-			arguments.sendMessage(chatManager.prefixedMessage("Commands.Type-Arena-Name"));
+			arguments.sendMessage(chatManager.prefixedMessage("commands.type_arena_name"));
 			return;
 		}
 
@@ -123,7 +122,7 @@ public class AdminCommands {
 		Arena arena = ArenaRegistry.getArena(name);
 
 		if (arena == null) {
-			arguments.sendMessage(chatManager.prefixedMessage("Commands.No-Arena-Like-That"));
+			arguments.sendMessage(chatManager.prefixedMessage("commands.no_arena_like_that"));
 			return;
 		}
 
@@ -135,7 +134,7 @@ public class AdminCommands {
 
 		plugin.getSignManager().loadSigns();
 
-		arguments.sendMessage(chatManager.prefixedMessage("Commands.Removed-Game-Instance"));
+		arguments.sendMessage(chatManager.prefixedMessage("commands.removed_game_instance"));
 	}
 
 	@Command(
@@ -149,7 +148,7 @@ public class AdminCommands {
 		Arena arena = ArenaRegistry.getArena(arguments.getArgument(0));
 
 		if (arena == null) {
-			arguments.sendMessage(chatManager.prefixedMessage("Commands.No-Arena-Like-That"));
+			arguments.sendMessage(chatManager.prefixedMessage("commands.no_arena_like_that"));
 			return;
 		}
 
@@ -193,7 +192,7 @@ public class AdminCommands {
 
 		ArenaRegistry.registerArenas();
 
-		arguments.sendMessage(chatManager.prefixedMessage("Commands.Admin-Commands.Success-Reload"));
+		arguments.sendMessage(chatManager.prefixedMessage("commands.admin_commands.success_reload"));
 		LogUtils.log("Finished reloading took {0} ms", System.currentTimeMillis() - start);
 	}
 
@@ -224,7 +223,7 @@ public class AdminCommands {
 		arguments.sendMessage(plugin.getChatManager().coloredRawMessage("&3&l---- Classic Duels Admin Commands ----"));
 		arguments.sendMessage("");
 
-		Player player = arguments.getSender();
+		final Player player = arguments.getSender();
 
 		for (Command command : plugin.getCommandFramework().getCommands()) {
 			String usage = command.usage();
@@ -240,7 +239,7 @@ public class AdminCommands {
 			}
 		}
 
-		if (arguments.isArgumentsEmpty()) {
+		if (arguments.isSenderPlayer()) {
 			player.sendMessage("");
 			player.spigot().sendMessage(new ComponentBuilder("TIP:").color(ChatColor.YELLOW).bold(true)
 				.append(" Try to ", ComponentBuilder.FormatRetention.NONE).color(ChatColor.GRAY)

@@ -19,7 +19,7 @@
 package me.despical.classicduels.handlers.sign;
 
 import me.despical.classicduels.arena.Arena;
-import me.despical.commonsbox.compat.VersionResolver;
+import me.despical.commons.compat.VersionResolver;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -30,11 +30,7 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.InvocationTargetException;
 
 /**
- * Created for 1.14 compatibility purposes, it will cache block behind
- * sign that will be accessed via reflection on 1.14 which is expensive
- *
  * @author Despical
- * @since 1.0.0
  * <p>
  * Created at 11.10.2020
  */

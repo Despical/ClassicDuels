@@ -19,14 +19,13 @@
 package me.despical.classicduels.kits.base;
 
 import me.despical.classicduels.kits.Kit;
-import me.despical.commonsbox.item.ItemBuilder;
+import me.despical.commons.item.ItemBuilder;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 
 /**
  * @author Despical
- * @since 1.0.0
  * <p>
  * Created at 21.10.2020
  */

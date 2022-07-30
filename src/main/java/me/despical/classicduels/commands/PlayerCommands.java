@@ -10,13 +10,11 @@ import me.despical.classicduels.arena.ArenaState;
 import me.despical.classicduels.handlers.ChatManager;
 import me.despical.classicduels.user.User;
 import me.despical.classicduels.user.data.MysqlManager;
+import me.despical.classicduels.utils.LayoutMenu;
 import me.despical.commandframework.Command;
 import me.despical.commandframework.CommandArguments;
-import me.despical.commons.configuration.ConfigUtils;
 import org.apache.commons.lang.StringUtils;
-import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
 import java.sql.Connection;
@@ -35,12 +33,10 @@ public class PlayerCommands {
 
 	private final Main plugin;
 	private final ChatManager chatManager;
-	private final FileConfiguration config;
 
 	public PlayerCommands(Main plugin) {
 		this.plugin = plugin;
 		this.chatManager = plugin.getChatManager();
-		this.config = ConfigUtils.getConfig(plugin, "arenas");
 
 		plugin.getCommandFramework().registerCommands(this);
 	}
@@ -65,7 +61,8 @@ public class PlayerCommands {
 	}
 
 	@Command(
-		name = "cd.leave"
+		name = "cd.leave",
+		senderType = Command.SenderType.PLAYER
 	)
 	public void leaveCommand(CommandArguments arguments) {
 		if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.DISABLE_LEAVE_COMMAND)) {
@@ -86,7 +83,8 @@ public class PlayerCommands {
 	}
 
 	@Command(
-		name = "cd.randomjoin"
+		name = "cd.randomjoin",
+		senderType = Command.SenderType.PLAYER
 	)
 	public void randomJoinCommand(CommandArguments arguments) {
 		final List<Arena> arenas = ArenaRegistry.getArenas().stream().filter(arena -> arena.getArenaState() == ArenaState.STARTING && arena.getPlayers().size() < 2).collect(Collectors.toList());
@@ -99,6 +97,21 @@ public class PlayerCommands {
 		}
 
 		arguments.sendMessage(chatManager.prefixedMessage("commands.no_free_arenas"));
+	}
+
+	@Command(
+		name = "cd.layout",
+		senderType = Command.SenderType.PLAYER
+	)
+	public void layoutCommand(CommandArguments arguments) {
+		Player player = arguments.getSender();
+
+		if (ArenaRegistry.isInArena(player)) {
+			player.sendMessage(chatManager.prefixedMessage("only_command_ingame_is_leave"));
+			return;
+		}
+
+		new LayoutMenu(player).openGui();
 	}
 
 	@Command(
@@ -179,7 +192,8 @@ public class PlayerCommands {
 							sender.sendMessage(formatMessage(statistic, set.getString(1), i + 1, stats.get(current)));
 							continue;
 						}
-					} catch (SQLException ignored) {}
+					} catch (SQLException ignored) {
+					}
 				}
 
 				sender.sendMessage(formatMessage(statistic, "Unknown Player", i + 1, stats.get(current)));

@@ -74,12 +74,12 @@ public class ChatEvents implements Listener {
 	}
 
 	private String formatChatPlaceholders(Player player, String saidMessage) {
-		String formatted = plugin.getChatManager().colorMessage("In-Game.Game-Chat-Format");
+		String formatted = plugin.getChatManager().coloredRawMessage("In-Game.Game-Chat-Format");
 		formatted = StringUtils.replace(formatted, "%player%", player.getName());
 		saidMessage = saidMessage.replaceAll(Pattern.quote("[$\\]"), "");
 		formatted = StringUtils.replace(formatted, "%message%", ChatColor.stripColor(saidMessage));
 
-		if (plugin.getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+		if (plugin.getChatManager().isPapiEnabled()) {
 			formatted = PlaceholderAPI.setPlaceholders(player, formatted);
 		}
 

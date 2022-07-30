@@ -21,6 +21,7 @@ package me.despical.classicduels.arena;
 import me.despical.classicduels.Main;
 import me.despical.commons.configuration.ConfigUtils;
 import me.despical.commons.serializer.LocationSerializer;
+import me.despical.commons.util.LogUtils;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -28,7 +29,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 /**
  * @author Despical
@@ -39,7 +39,6 @@ public class ArenaRegistry {
 
 	private static final Main plugin = JavaPlugin.getPlugin(Main.class);
 	private static final List<Arena> arenas = new ArrayList<>();
-	private static int bungeeArena = -999;
 
 	public static boolean isInArena(Player player) {
 		return getArena(player) != null;
@@ -76,17 +75,17 @@ public class ArenaRegistry {
 	}
 
 	public static void registerArena(Arena arena) {
-		Debugger.debug("Registering new game instance {0}", arena.getId());
+		LogUtils.log("Registering new game instance {0}", arena.getId());
 		arenas.add(arena);
 	}
 
 	public static void unregisterArena(Arena arena) {
-		Debugger.debug("Unregistering game instance {0}", arena.getId());
+		LogUtils.log("Unregistering game instance {0}", arena.getId());
 		arenas.remove(arena);
 	}
 
 	public static void registerArenas() {
-		Debugger.debug("Initial arenas registration");
+		LogUtils.log("Initial arenas registration");
 		long start = System.currentTimeMillis();
 
 		arenas.clear();
@@ -94,14 +93,14 @@ public class ArenaRegistry {
 		FileConfiguration config = ConfigUtils.getConfig(plugin, "arenas");
 
 		if (!config.contains("instances")) {
-			Debugger.sendConsoleMessage(plugin.getChatManager().colorMessage("Validator.No-Instances-Created"));
+			LogUtils.sendConsoleMessage(plugin.getChatManager().message("Validator.No-Instances-Created"));
 			return;
 		}
 
 		ConfigurationSection section = config.getConfigurationSection("instances");
 
 		if (section == null) {
-			Debugger.sendConsoleMessage(plugin.getChatManager().colorMessage("Validator.No-Instances-Created"));
+			LogUtils.sendConsoleMessage(plugin.getChatManager().message("Validator.No-Instances-Created"));
 			return;
 		}
 
@@ -121,7 +120,7 @@ public class ArenaRegistry {
 			arena.setEndLocation(LocationSerializer.fromString(config.getString(s + "endlocation")));
 
 			if (!config.getBoolean(s + "isdone")) {
-				Debugger.sendConsoleMessage(plugin.getChatManager().colorMessage("Validator.Invalid-Arena-Configuration").replace("%arena%", id).replace("%error%", "NOT VALIDATED"));
+				LogUtils.sendConsoleMessage(plugin.getChatManager().message("Validator.Invalid-Arena-Configuration").replace("%arena%", id).replace("%error%", "NOT VALIDATED"));
 				arena.setReady(false);
 				ArenaRegistry.registerArena(arena);
 				continue;
@@ -130,25 +129,14 @@ public class ArenaRegistry {
 			arena.setArenaState(ArenaState.WAITING_FOR_PLAYERS);
 			ArenaRegistry.registerArena(arena);
 			arena.start();
-			Debugger.sendConsoleMessage(plugin.getChatManager().colorMessage("Validator.Instance-Started").replace("%arena%", id));
+			LogUtils.sendConsoleMessage(plugin.getChatManager().message("Validator.Instance-Started").replace("%arena%", id));
 		}
 
-		Debugger.debug("Arenas registration completed, took {0} ms", System.currentTimeMillis() - start);
+		LogUtils.log("Arenas registration completed, took {0} ms", System.currentTimeMillis() - start);
 	}
 
 	public static List<Arena> getArenas() {
 		return arenas;
 	}
 
-	public static void shuffleBungeeArena() {
-		bungeeArena = new Random().nextInt(arenas.size());
-	}
-
-	public static int getBungeeArena() {
-		if (bungeeArena == -999) {
-			bungeeArena = new Random().nextInt(arenas.size());
-		}
-
-		return bungeeArena;
-	}
 }

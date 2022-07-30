@@ -24,7 +24,6 @@ import me.despical.classicduels.arena.ArenaRegistry;
 import me.despical.classicduels.user.User;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -47,7 +46,7 @@ public class SpectatorEvents implements Listener {
 		plugin.getServer().getPluginManager().registerEvents(this, plugin);
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onSpectatorTarget(EntityTargetEvent e) {
 		if (!(e.getTarget() instanceof Player)) {
 			return;
@@ -59,7 +58,7 @@ public class SpectatorEvents implements Listener {
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onSpectatorTarget(EntityTargetLivingEntityEvent e) {
 		if (!(e.getTarget() instanceof Player)) {
 			return;
@@ -71,56 +70,56 @@ public class SpectatorEvents implements Listener {
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onBlockPlace(BlockPlaceEvent event) {
 		if (plugin.getUserManager().getUser(event.getPlayer()).isSpectator()) {
 			event.setCancelled(true);
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onBlockBreak(BlockBreakEvent event) {
 		if (plugin.getUserManager().getUser(event.getPlayer()).isSpectator()) {
 			event.setCancelled(true);
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onDropItem(PlayerDropItemEvent event) {
 		if (plugin.getUserManager().getUser(event.getPlayer()).isSpectator()) {
 			event.setCancelled(true);
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onBucketEmpty(PlayerBucketEmptyEvent event) {
 		if (plugin.getUserManager().getUser(event.getPlayer()).isSpectator()) {
 			event.setCancelled(true);
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onInteract(PlayerInteractEntityEvent event) {
 		if (plugin.getUserManager().getUser(event.getPlayer()).isSpectator()) {
 			event.setCancelled(true);
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onShear(PlayerShearEntityEvent event) {
 		if (plugin.getUserManager().getUser(event.getPlayer()).isSpectator()) {
 			event.setCancelled(true);
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onConsume(PlayerItemConsumeEvent event) {
 		if (plugin.getUserManager().getUser(event.getPlayer()).isSpectator()) {
 			event.setCancelled(true);
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onFoodLevelChange(FoodLevelChangeEvent event) {
 		if (!(event.getEntity() instanceof Player)) {
 			return;
@@ -134,7 +133,7 @@ public class SpectatorEvents implements Listener {
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onDamage(EntityDamageEvent event) {
 		if (!(event.getEntity() instanceof Player)) {
 			return;
@@ -153,7 +152,7 @@ public class SpectatorEvents implements Listener {
 		event.setCancelled(true);
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onDamageByBlock(EntityDamageByBlockEvent event) {
 		if (!(event.getEntity() instanceof Player)) {
 			return;
@@ -166,7 +165,7 @@ public class SpectatorEvents implements Listener {
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onDamageByEntity(EntityDamageByEntityEvent event) {
 		if (!(event.getDamager() instanceof Player)) {
 			return;
@@ -179,14 +178,14 @@ public class SpectatorEvents implements Listener {
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onPickup(PlayerPickupItemEvent event) {
 		if (plugin.getUserManager().getUser(event.getPlayer()).isSpectator()) {
 			event.setCancelled(true);
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onSpectate(PlayerDropItemEvent event) {
 		Arena arena = ArenaRegistry.getArena(event.getPlayer());
 
@@ -199,7 +198,7 @@ public class SpectatorEvents implements Listener {
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onInteractEntityInteract(PlayerInteractEntityEvent event) {
 		User user = plugin.getUserManager().getUser(event.getPlayer());
 
@@ -208,7 +207,7 @@ public class SpectatorEvents implements Listener {
 		}
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler
 	public void onRightClick(PlayerInteractEvent event) {
 		if (ArenaRegistry.isInArena(event.getPlayer()) && plugin.getUserManager().getUser(event.getPlayer()).isSpectator()) {
 			event.setCancelled(true);

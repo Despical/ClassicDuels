@@ -25,9 +25,13 @@ import me.despical.classicduels.arena.*;
 import me.despical.classicduels.handlers.items.SpecialItemManager;
 import me.despical.classicduels.handlers.rewards.Reward;
 import me.despical.classicduels.user.User;
+import me.despical.commons.compat.VersionResolver;
 import me.despical.commons.compat.XMaterial;
 import me.despical.commons.item.ItemBuilder;
 import me.despical.commons.item.ItemUtils;
+import me.despical.commons.miscellaneous.AttributeUtils;
+import me.despical.commons.serializer.InventorySerializer;
+import me.despical.commons.util.UpdateChecker;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.entity.*;
@@ -51,14 +55,20 @@ import java.util.stream.Stream;
  * <p>
  * Created at 11.10.2020
  */
-public class Events implements Listener {
-
-	private final Main plugin;
+public class Events extends ListenerAdapter {
 
 	public Events(Main plugin) {
-		this.plugin = plugin;
+		super (plugin);
 
-		plugin.getServer().getPluginManager().registerEvents(this, plugin);
+		registerIf((bool) -> VersionResolver.isCurrentHigher(VersionResolver.ServerVersion.v1_9_R2), () -> new Listener() {
+
+			@EventHandler
+			public void onItemSwap(PlayerSwapHandItemsEvent event) {
+				if (ArenaRegistry.isInArena(event.getPlayer())) {
+					event.setCancelled(true);
+				}
+			}
+		});
 	}
 
 	@EventHandler
@@ -66,6 +76,67 @@ public class Events implements Listener {
 		if (ArenaRegistry.isInArena(event.getPlayer())) {
 			event.setCancelled(true);
 		}
+	}
+
+	@EventHandler
+	public void onJoin(PlayerJoinEvent event) {
+		Player player = event.getPlayer();
+
+		plugin.getUserManager().loadStatistics(plugin.getUserManager().getUser(player));
+
+		for (Player p : plugin.getServer().getOnlinePlayers()) {
+			if (!ArenaRegistry.isInArena(p)) {
+				continue;
+			}
+
+			p.hidePlayer(plugin, player);
+			player.hidePlayer(plugin, p);
+		}
+
+		if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.INVENTORY_MANAGER_ENABLED)) {
+			InventorySerializer.loadInventory(plugin, player);
+		}
+
+		if (!plugin.getConfig().getBoolean("Update-Notifier.Enabled", true) || !player.hasPermission("cd.updatenotify")) {
+			return;
+		}
+
+		plugin.getServer().getScheduler().runTaskLater(plugin, () -> UpdateChecker.init(plugin, 85356).requestUpdateCheck().whenComplete((result, exception) -> {
+			if (!result.requiresUpdate()) return;
+
+			player.sendMessage(plugin.getChatManager().coloredRawMessage("&3[ClassicDuels] &bFound an update: v" + result.getNewestVersion() + " Download:"));
+			player.sendMessage(plugin.getChatManager().coloredRawMessage("&3>> &bhttps://www.spigotmc.org/resources/classic-duels.85356/"));
+		}), 25);
+	}
+
+	@EventHandler
+	public void onQuit(PlayerQuitEvent event) {
+		Player player = event.getPlayer();
+		Arena arena = ArenaRegistry.getArena(player);
+
+		if (arena != null) {
+			ArenaManager.leaveAttempt(player, arena);
+		}
+
+		plugin.getUserManager().removeUser(player);
+	}
+
+	@EventHandler
+	public void onLobbyDamage(EntityDamageEvent event) {
+		if (event.getEntity().getType() != EntityType.PLAYER) {
+			return;
+		}
+
+		Player player = (Player) event.getEntity();
+		Arena arena = ArenaRegistry.getArena(player);
+
+		if (arena == null || arena.getArenaState() == ArenaState.IN_GAME) {
+			return;
+		}
+
+		event.setCancelled(true);
+		player.setFireTicks(0);
+		AttributeUtils.healPlayer(player);
 	}
 
 	@EventHandler
@@ -97,7 +168,7 @@ public class Events implements Listener {
 		}
 
 		event.setCancelled(true);
-		event.getPlayer().sendMessage(plugin.getChatManager().colorMessage("In-Game.Only-Command-Ingame-Is-Leave"));
+		event.getPlayer().sendMessage(chatManager.coloredRawMessage("In-Game.Only-Command-Ingame-Is-Leave"));
 	}
 
 	@EventHandler
@@ -312,11 +383,7 @@ public class Events implements Listener {
 		if (SpecialItemManager.getRelatedSpecialItem(itemStack).equalsIgnoreCase("Leave")) {
 			event.setCancelled(true);
 
-			if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BUNGEE_ENABLED)) {
-				plugin.getBungeeManager().connectToHub(player);
-			} else {
-				ArenaManager.leaveAttempt(player, arena);
-			}
+			ArenaManager.leaveAttempt(player, arena);
 		}
 	}
 
@@ -363,7 +430,7 @@ public class Events implements Listener {
 				}
 			}
 
-			player.sendMessage(plugin.getChatManager().prefixedMessage("Commands.No-Free-Arenas"));
+			player.sendMessage(chatManager.prefixedMessage("Commands.No-Free-Arenas"));
 		}
 	}
 

@@ -20,8 +20,7 @@ package me.despical.classicduels.events.spectator.components;
 
 import me.despical.classicduels.Main;
 import me.despical.classicduels.events.spectator.SpectatorSettingsMenu;
-import me.despical.commonsbox.compat.XMaterial;
-import me.despical.commonsbox.item.ItemBuilder;
+import me.despical.commons.item.ItemBuilder;
 import me.despical.inventoryframework.GuiItem;
 import me.despical.inventoryframework.pane.StaticPane;
 import org.bukkit.Material;
@@ -48,10 +47,10 @@ public class SpeedComponents implements SpectatorSettingComponent {
 	public void injectComponents(StaticPane pane) {
 		Main plugin = spectatorSettingsMenu.getPlugin();
 		Player player = spectatorSettingsMenu.getPlayer();
-		String speedPrefix = plugin.getChatManager().colorMessage("In-Game.Spectator.Settings-Menu.Speed-Name");
+		String speedPrefix = plugin.getChatManager().message("In-Game.Spectator.Settings-Menu.Speed-Name");
 
 		pane.addItem(new GuiItem(new ItemBuilder(Material.LEATHER_BOOTS)
-			.name(plugin.getChatManager().colorMessage("In-Game.Spectator.Settings-Menu.No-Speed"))
+			.name(plugin.getChatManager().message("In-Game.Spectator.Settings-Menu.No-Speed"))
 			.build(), e -> {
 			player.closeInventory();
 			player.removePotionEffect(PotionEffectType.SPEED);
@@ -76,7 +75,7 @@ public class SpeedComponents implements SpectatorSettingComponent {
 			player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 2, false, false));
 		}), 4, 1);
 
-		pane.addItem(new GuiItem(new ItemBuilder(XMaterial.GOLDEN_BOOTS.parseMaterial())
+		pane.addItem(new GuiItem(new ItemBuilder(Material.GOLDEN_BOOTS)
 			.name(speedPrefix + " III")
 			.build(), e -> {
 			player.closeInventory();

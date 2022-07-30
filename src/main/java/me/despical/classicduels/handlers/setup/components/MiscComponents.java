@@ -18,16 +18,15 @@
 
 package me.despical.classicduels.handlers.setup.components;
 
-import me.despical.classicduels.ConfigPreferences;
 import me.despical.classicduels.Main;
 import me.despical.classicduels.arena.Arena;
 import me.despical.classicduels.handlers.setup.SetupInventory;
 import me.despical.classicduels.handlers.sign.ArenaSign;
-import me.despical.classicduels.utils.conversation.SimpleConversationBuilder;
-import me.despical.commonsbox.compat.XMaterial;
-import me.despical.commonsbox.configuration.ConfigUtils;
-import me.despical.commonsbox.item.ItemBuilder;
-import me.despical.commonsbox.serializer.LocationSerializer;
+import me.despical.commons.compat.XMaterial;
+import me.despical.commons.configuration.ConfigUtils;
+import me.despical.commons.item.ItemBuilder;
+import me.despical.commons.serializer.LocationSerializer;
+import me.despical.commons.util.conversation.ConversationBuilder;
 import me.despical.inventoryframework.GuiItem;
 import me.despical.inventoryframework.pane.StaticPane;
 import org.bukkit.Bukkit;
@@ -41,12 +40,12 @@ import org.bukkit.conversations.StringPrompt;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
 /**
  * @author Despical
- * @since 1.0.0
  * <p>
  * Created at 12.10.2020
  */
@@ -66,46 +65,31 @@ public class MiscComponents implements SetupComponent {
 		Arena arena = setupInventory.getArena();
 		Main plugin = setupInventory.getPlugin();
 		String s = "instances." + arena.getId() + ".";
-		ItemStack bungeeItem;
-
-		if (!plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BUNGEE_ENABLED)) {
-			bungeeItem = new ItemBuilder(XMaterial.OAK_SIGN.parseItem())
+		ItemStack bungeeItem = new ItemBuilder(XMaterial.OAK_SIGN.parseItem())
 				.name("&e&lAdd Game Sign")
 				.lore("&7Target a sign and click this.")
 				.lore("&8(this will set target sign as game sign)")
 				.build();
-		} else {
-			bungeeItem = new ItemBuilder(Material.BARRIER)
-				.name("&c&lAdd Game Sign")
-				.lore("&7Option disabled in bungee cord mode.")
-				.lore("&8Bungee mode is meant to be one arena per server")
-				.lore("&8If you wish to have multi arena, disable bungee in config!")
-				.build();
-		}
 
 		pane.addItem(new GuiItem(bungeeItem, e -> {
-			if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BUNGEE_ENABLED)) {
-				return;
-			}
-
 			e.getWhoClicked().closeInventory();
 			Location location = player.getTargetBlock(null, 10).getLocation();
 
 			if (!(location.getBlock().getState() instanceof Sign)) {
-				player.sendMessage(plugin.getChatManager().getPrefix() + plugin.getChatManager().colorMessage("Commands.Look-Sign"));
+				player.sendMessage(plugin.getChatManager().prefixedMessage("Commands.Look-Sign"));
 				return;
 			}
 
 			if (location.distance(e.getWhoClicked().getWorld().getSpawnLocation()) <= Bukkit.getServer().getSpawnRadius() && e.getClick() != ClickType.SHIFT_LEFT) {
-				e.getWhoClicked().sendMessage(plugin.getChatManager().colorRawMessage("&c&l✖ &cWarning | Server spawn protection is set to &6" + Bukkit.getServer().getSpawnRadius() + " &cand sign you want to place is in radius of this protection! &c&lNon opped players won't be able to interact with this sign and can't join the game so."));
+				e.getWhoClicked().sendMessage(plugin.getChatManager().coloredRawMessage("&c&l✖ &cWarning | Server spawn protection is set to &6" + Bukkit.getServer().getSpawnRadius() + " &cand sign you want to place is in radius of this protection! &c&lNon opped players won't be able to interact with this sign and can't join the game so."));
 				return;
 			}
 
 			plugin.getSignManager().getArenaSigns().add(new ArenaSign((Sign) location.getBlock().getState(), arena));
 			plugin.getSignManager().updateSigns();
-			player.sendMessage(plugin.getChatManager().getPrefix() + plugin.getChatManager().colorMessage("Signs.Sign-Created"));
+			player.sendMessage(plugin.getChatManager().prefixedMessage("Signs.Sign-Created"));
 
-			String signLoc = LocationSerializer.locationToString(location);
+			String signLoc = LocationSerializer.toString(location);
 			List<String> locs = config.getStringList(s + "signs");
 			locs.add(signLoc);
 
@@ -120,18 +104,19 @@ public class MiscComponents implements SetupComponent {
 			.build(), e -> {
 			e.getWhoClicked().closeInventory();
 
-			new SimpleConversationBuilder().withPrompt(new StringPrompt() {
+			new ConversationBuilder(plugin).withPrompt(new StringPrompt() {
 
+				@NotNull
 				@Override
-				public String getPromptText(ConversationContext context) {
-					return plugin.getChatManager().getPrefix() + plugin.getChatManager().colorRawMessage("&ePlease type in chat arena name! You can use color codes.");
+				public String getPromptText(@NotNull ConversationContext context) {
+					return plugin.getChatManager().prefixedRawMessage("&ePlease type in chat arena name! You can use color codes.");
 				}
 
 				@Override
-				public Prompt acceptInput(ConversationContext context, String input) {
-					String name = plugin.getChatManager().colorRawMessage(input);
+				public Prompt acceptInput(@NotNull ConversationContext context, String input) {
+					String name = plugin.getChatManager().coloredRawMessage(input);
 
-					player.sendRawMessage(plugin.getChatManager().colorRawMessage("&e✔ Completed | &aName of arena " + arena.getId() + " set to " + name));
+					player.sendRawMessage(plugin.getChatManager().coloredRawMessage("&e✔ Completed | &aName of arena " + arena.getId() + " set to " + name));
 					arena.setMapName(name);
 					config.set(s + "mapname", arena.getMapName());
 					ConfigUtils.saveConfig(plugin, config, "arenas");
@@ -148,7 +133,7 @@ public class MiscComponents implements SetupComponent {
 			.lore("&7know some useful tips? Click to get wiki link!")
 			.build(), e -> {
 			e.getWhoClicked().closeInventory();
-			player.sendMessage(plugin.getChatManager().getPrefix() + plugin.getChatManager().colorRawMessage("&8Check out our wiki: &7https://github.com/Despical/ClassicDuels/wiki"));
+			player.sendMessage(plugin.getChatManager().prefixedRawMessage("&8Check out our wiki: &7https://github.com/Despical/ClassicDuels/wiki"));
 		}), 7, 0);
 	}
 }

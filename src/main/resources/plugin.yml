@@ -5,11 +5,6 @@ version: ${project.version}
 api-version: 1.13
 softdepend: [Multiverse-Core, PlaceholderAPI]
 
-commands:
-  ClassicDuels:
-    description: Classic Duels commands
-    aliases: [cd, duels]
-
 permissions:
   cd.admin.*:
     default: op

@@ -19,7 +19,8 @@
 package me.despical.classicduels.handlers.language;
 
 import me.despical.classicduels.Main;
-import me.despical.commonsbox.file.FileUtils;
+import me.despical.commons.file.FileUtils;
+import me.despical.commons.util.LogUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,7 +29,6 @@ import java.util.Arrays;
 
 /**
  * @author Despical
- * @since 1.0.1
  * <p>
  * Created at 01.11.2018
  */
@@ -40,21 +40,20 @@ public class LanguageManager {
 	public LanguageManager(Main plugin) {
 		this.plugin = plugin;
 
-		new LanguageMigrator(plugin);
 		registerLocales();
 		setupLocale();
 		init();
 	}
 
 	private void init() {
-		if (pluginLocale.getAliases().contains(plugin.getChatManager().colorMessage("Language"))) {
+		if (pluginLocale.getAliases().contains(plugin.getChatManager().message("Language"))) {
 			return;
 		}
 
 		try {
 			FileUtils.copyURLToFile(new URL("https://raw.githubusercontent.com/Despical/LocaleStorage/main/Minecraft/Classic%20Duels/" + pluginLocale.getPrefix() + ".yml"), new File(plugin.getDataFolder() + File.separator + "messages.yml"));
 		} catch (IOException e) {
-			Debugger.sendConsoleMessage("&c[Classic Duels] Error while connecting to internet!");
+			LogUtils.sendConsoleMessage("&c[Classic Duels] Error while connecting to internet!");
 		}
 	}
 
@@ -67,12 +66,6 @@ public class LanguageManager {
 	}
 
 	private void setupLocale() {
-		if (plugin.getConfig().getBoolean("Developer-Mode")) {
-			Debugger.sendConsoleMessage("&c[Classic Duels] Locales aren't supported in beta versions because they're lacking latest translations! Using default one...");
-			pluginLocale = LocaleRegistry.getByName("English");
-			return;
-		}
-
 		String localeName = plugin.getConfig().getString("locale", "default").toLowerCase();
 
 		for (Locale locale : LocaleRegistry.getRegisteredLocales()) {
@@ -90,11 +83,11 @@ public class LanguageManager {
 		}
 
 		if (pluginLocale == null) {
-			Debugger.sendConsoleMessage("&c[Classic Duels] Plugin locale is invalid! Using default one...");
+			LogUtils.sendConsoleMessage("&c[ClassicDuels] Plugin locale is invalid! Using default one...");
 			pluginLocale = LocaleRegistry.getByName("English");
 		}
 
-		Debugger.sendConsoleMessage("[Classic Duels] Loaded locale " + pluginLocale.getName() + " (" + pluginLocale.getOriginalName() + " ID: " + pluginLocale.getPrefix() + ") by " + pluginLocale.getAuthor());
+		LogUtils.sendConsoleMessage("[ClassicDuels] Loaded locale " + pluginLocale.getName() + " (" + pluginLocale.getOriginalName() + " ID: " + pluginLocale.getPrefix() + ") by " + pluginLocale.getAuthor());
 	}
 
 	public Locale getPluginLocale() {
