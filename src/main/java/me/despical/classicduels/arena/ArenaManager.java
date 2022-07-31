@@ -241,9 +241,9 @@ public class ArenaManager {
 
 		arena.getScoreboardManager().stopAllScoreboards();
 
-		final String path = "in_game.messages.game_end_messages.", winner = getWinner(arena).getName();
-
 		if (!quickStop) {
+			final String path = "in_game.messages.game_end_messages.", winner = getWinner(arena).getName();
+
 			for (Player player : arena.getPlayers()) {
 				User user = plugin.getUserManager().getUser(player);
 
