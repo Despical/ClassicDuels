@@ -202,7 +202,6 @@ public class AdminCommands {
 		permission = "cd.admin.stop",
 		usage = "/cd stop",
 		desc = "Stop the arena you're in",
-		min = 1,
 		senderType = Command.SenderType.PLAYER
 	)
 	public void stopCommand(CommandArguments arguments) {
@@ -220,7 +219,7 @@ public class AdminCommands {
 	)
 	public void helpCommand(CommandArguments arguments) {
 		arguments.sendMessage("");
-		arguments.sendMessage(chatManager.coloredRawMessage("&3&l---- King of the Ladder Admin Commands ----"));
+		arguments.sendMessage(chatManager.coloredRawMessage("&3&l---- Classic Duels Admin Commands ----"));
 		arguments.sendMessage("");
 
 		CommandSender sender = arguments.getSender();

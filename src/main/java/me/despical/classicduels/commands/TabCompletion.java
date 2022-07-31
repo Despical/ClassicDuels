@@ -45,7 +45,7 @@ public class TabCompletion {
 	}
 
 	@Completer(
-		name = "kotl"
+		name = "cd"
 	)
 	public List<String> onTabComplete(CommandArguments arguments) {
 		final List<String> completions = new ArrayList<>(), commands = plugin.getCommandFramework().getCommands().stream().map(cmd -> cmd.name().replace(arguments.getLabel() + '.', "")).collect(Collectors.toList());

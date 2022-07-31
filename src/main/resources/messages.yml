@@ -60,7 +60,7 @@ Scoreboard:
       - ""
       - "&fCurrent Streak: &a%win_streak%"
       - ""
-      - "&ewww.despical.com"
+      - "&epatreon.com/Despical"
     Waiting:
       - ""
       - "&fMap: &a%mapname%"
@@ -68,7 +68,7 @@ Scoreboard:
       - ""
       - "&fWaiting..."
       - ""
-      - "&ewww.despical.com"
+      - "&epatreon.com/Despical"
     Starting:
       - ""
       - "&fMap: &a%mapname%"
@@ -76,10 +76,10 @@ Scoreboard:
       - ""
       - "&fStarting in &a%time%s"
       - ""
-      - "&ewww.despical.com"
+      - "&epatreon.com/Despical"
 
-# Has usage only when bossbar is enabled in config.yml
-Bossbar:
+# Has usage only when boss bar is enabled in config.yml
+Boss-Bar:
   Main-Title: "&a&lClassic Duels &f&l- &6&lDespical"
   Starting-In: "&f&lStarting in: &e&l%time%"
   Waiting-For-Players: "&4&lWaiting for more players..."
@@ -181,3 +181,5 @@ Validator:
   Invalid-Arena-Configuration: "[Classic Duels] Arena %arena% has invalid configuration! Missing node: %error%"
   Instance-Started: "[Classic Duels] Arena %arena% instance successfully started!"
   No-Instances-Created: "[Classic Duels] There are no arena instances created in configuration!"
+
+Language: default

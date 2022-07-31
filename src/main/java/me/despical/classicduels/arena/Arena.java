@@ -34,6 +34,7 @@ import me.despical.commons.miscellaneous.AttributeUtils;
 import me.despical.commons.miscellaneous.MiscUtils;
 import me.despical.commons.serializer.InventorySerializer;
 import me.despical.commons.serializer.LocationSerializer;
+import me.despical.commons.util.LogUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -84,7 +85,7 @@ public class Arena extends BukkitRunnable {
 		}
 
 		if (plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BOSS_BAR_ENABLED)) {
-			gameBar = Bukkit.createBossBar(plugin.getChatManager().message("Bossbar.Main-Title"), BarColor.BLUE, BarStyle.SOLID);
+			gameBar = Bukkit.createBossBar(plugin.getChatManager().message("boss_bar.main_title"), BarColor.BLUE, BarStyle.SOLID);
 		}
 
 		scoreboardManager = new ScoreboardManager(plugin, this);
@@ -383,7 +384,7 @@ public class Arena extends BukkitRunnable {
 		Location location = players.size() == 1 ? getFirstPlayerLocation() : getSecondPlayerLocation();
 
 		if (location == null) {
-			System.out.print("Lobby location isn't initialized for arena " + id);
+			LogUtils.sendConsoleMessage("Lobby location isn't initialized for arena " + id);
 			return;
 		}
 
@@ -395,27 +396,15 @@ public class Arena extends BukkitRunnable {
 		getPlayersLeft().get(1).teleport(getSecondPlayerLocation());
 	}
 
-	/**
-	 * Executes boss bar action for arena
-	 *
-	 * @param action add or remove a player from boss bar
-	 * @param p player
-	 */
 	public void doBarAction(BarAction action, Player p) {
-		if (!plugin.getConfigPreferences().getOption(ConfigPreferences.Option.BOSS_BAR_ENABLED)) {
+		if (gameBar == null) return;
+		
+		if (action == BarAction.ADD) {
+			gameBar.addPlayer(p);
 			return;
 		}
-
-		switch (action) {
-			case ADD:
-				gameBar.addPlayer(p);
-				break;
-			case REMOVE:
-				gameBar.removePlayer(p);
-				break;
-			default:
-				break;
-		}
+		
+		gameBar.removePlayer(p);
 	}
 
 	public Location getFirstPlayerLocation() {
@@ -434,27 +423,12 @@ public class Arena extends BukkitRunnable {
 		gameLocations.put(GameLocation.SECOND_PLAYER, location);
 	}
 
-	public void teleportAllToEndLocation() {
-		Location location = getEndLocation();
-
-		if (location == null) {
-			location = getFirstPlayerLocation();
-			System.out.print("End location for arena " + id + " isn't initialized!");
-		}
-
-		if (location != null) {
-			for (Player player : getPlayers()) {
-				player.teleport(location);
-			}
-		}
-	}
-
 	public void teleportToEndLocation(Player player) {
 		Location location = getEndLocation();
 
 		if (location == null) {
 			location = getFirstPlayerLocation();
-			System.out.print("End location for arena " + id + " isn't initialized!");
+			LogUtils.sendConsoleMessage("End location for arena " + id + " isn't initialized!");
 		}
 
 		if (location != null) {
@@ -471,7 +445,7 @@ public class Arena extends BukkitRunnable {
 			return;
 		}
 
-		Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+		plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
 			for (int x = (int) minArea.getX(); x <= maxArea.getX(); x++) {
 				for (int y = (int) minArea.getY(); y <= maxArea.getY(); y++) {
 					for (int z = (int) minArea.getZ(); z <= maxArea.getZ(); z++) {
@@ -488,20 +462,10 @@ public class Arena extends BukkitRunnable {
 		});
 	}
 
-	/**
-	 * Get end location of arena.
-	 *
-	 * @return end location of arena
-	 */
 	public Location getEndLocation() {
 		return gameLocations.get(GameLocation.END);
 	}
 
-	/**
-	 * Set end location of arena.
-	 *
-	 * @param endLoc new end location of arena
-	 */
 	public void setEndLocation(Location endLoc) {
 		gameLocations.put(GameLocation.END, endLoc);
 	}

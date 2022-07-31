@@ -145,7 +145,7 @@ public class ChatManager {
 
 	public void broadcastAction(Arena arena, User user, ActionType action) {
 		if (!user.isSpectator()) {
-			arena.broadcastMessage(prefix + formatMessage(arena, message("in_game.messages." + StringUtils.capitalize(action.name().toLowerCase(Locale.ENGLISH))), user.getPlayer()));
+			arena.broadcastMessage(formatMessage(arena, message("in_game.messages." + StringUtils.capitalize(action.name().toLowerCase(Locale.ENGLISH))), user.getPlayer()));
 		}
 	}
 

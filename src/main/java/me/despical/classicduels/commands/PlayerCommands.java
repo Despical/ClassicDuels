@@ -13,6 +13,7 @@ import me.despical.classicduels.user.data.MysqlManager;
 import me.despical.classicduels.utils.LayoutMenu;
 import me.despical.commandframework.Command;
 import me.despical.commandframework.CommandArguments;
+import me.despical.commons.string.StringMatcher;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -39,6 +40,17 @@ public class PlayerCommands {
 		this.chatManager = plugin.getChatManager();
 
 		plugin.getCommandFramework().registerCommands(this);
+		plugin.getCommandFramework().setAnyMatch(arguments -> {
+			if (arguments.isArgumentsEmpty()) return;
+
+			final String label = arguments.getLabel(), arg = arguments.getArgument(0);
+
+			List<StringMatcher.Match> matches = StringMatcher.match(arg, plugin.getCommandFramework().getCommands().stream().map(cmd -> cmd.name().replace(label + ".", "")).collect(Collectors.toList()));
+
+			if (!matches.isEmpty()) {
+				arguments.sendMessage(chatManager.prefixedMessage("commands.did_you_mean").replace("%command%", label + " " + matches.get(0).getMatch()));
+			}
+		});
 	}
 
 	@Command(
@@ -100,7 +112,7 @@ public class PlayerCommands {
 		senderType = Command.SenderType.PLAYER
 	)
 	public void randomJoinCommand(CommandArguments arguments) {
-		final List<Arena> arenas = ArenaRegistry.getArenas().stream().filter(arena -> arena.getArenaState() == ArenaState.STARTING && arena.getPlayers().size() < 2).collect(Collectors.toList());
+		final List<Arena> arenas = ArenaRegistry.getArenas().stream().filter(arena -> arena.getArenaState() == ArenaState.WAITING_FOR_PLAYERS && arena.getPlayers().size() < 2).collect(Collectors.toList());
 
 		if (!arenas.isEmpty()) {
 			final Arena arena = arenas.get(0);

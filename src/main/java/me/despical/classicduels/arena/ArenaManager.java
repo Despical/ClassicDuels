@@ -25,16 +25,17 @@ import me.despical.classicduels.api.StatsStorage;
 import me.despical.classicduels.api.events.game.CDGameJoinAttemptEvent;
 import me.despical.classicduels.api.events.game.CDGameLeaveAttemptEvent;
 import me.despical.classicduels.api.events.game.CDGameStopEvent;
+import me.despical.classicduels.handlers.ChatManager;
 import me.despical.classicduels.handlers.PermissionManager;
 import me.despical.classicduels.handlers.items.SpecialItemManager;
 import me.despical.classicduels.handlers.rewards.Reward;
 import me.despical.classicduels.user.User;
+import me.despical.commons.compat.Titles;
 import me.despical.commons.miscellaneous.AttributeUtils;
 import me.despical.commons.miscellaneous.MiscUtils;
 import me.despical.commons.serializer.InventorySerializer;
 import me.despical.commons.string.StringFormatUtils;
 import org.apache.commons.lang.StringUtils;
-import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -54,6 +55,7 @@ import java.util.stream.IntStream;
 public class ArenaManager {
 
 	private static final Main plugin = JavaPlugin.getPlugin(Main.class);
+	private static final ChatManager chatManager = plugin.getChatManager();
 
 	private ArenaManager() {
 	}
@@ -69,27 +71,26 @@ public class ArenaManager {
 	 * // TODO: ADD AttributeUtils#setAttackCooldown
 	 */
 	public static void joinAttempt(Player player, Arena arena) {
-		long start = System.currentTimeMillis();
 		CDGameJoinAttemptEvent gameJoinAttemptEvent = new CDGameJoinAttemptEvent(arena, player);
-		Bukkit.getPluginManager().callEvent(gameJoinAttemptEvent);
+		plugin.getServer().getPluginManager().callEvent(gameJoinAttemptEvent);
 
 		if (!arena.isReady()) {
-			player.sendMessage(plugin.getChatManager().message("In-Game.Arena-Not-Configured"));
+			player.sendMessage(chatManager.message("In-Game.Arena-Not-Configured"));
 			return;
 		}
 
 		if (gameJoinAttemptEvent.isCancelled()) {
-			player.sendMessage(plugin.getChatManager().message("In-Game.Join-Cancelled-Via-API"));
+			player.sendMessage(chatManager.message("In-Game.Join-Cancelled-Via-API"));
 			return;
 		}
 
 		if (ArenaRegistry.isInArena(player)) {
-			player.sendMessage(plugin.getChatManager().message("In-Game.Already-Playing"));
+			player.sendMessage(chatManager.message("In-Game.Already-Playing"));
 			return;
 		}
 
 		if (!player.hasPermission(PermissionManager.getJoinPerm().replace("<arena>", "*")) || !player.hasPermission(PermissionManager.getJoinPerm().replace("<arena>", arena.getId()))) {
-			player.sendMessage(plugin.getChatManager().message("In-Game.Join-No-Permission").replace("%permission%", PermissionManager.getJoinPerm().replace("<arena>", arena.getId())));
+			player.sendMessage(chatManager.message("In-Game.Join-No-Permission").replace("%permission%", PermissionManager.getJoinPerm().replace("<arena>", arena.getId())));
 			return;
 		}
 
@@ -119,7 +120,7 @@ public class ArenaManager {
 
 		if (arena.getArenaState() == ArenaState.IN_GAME || arena.getArenaState() == ArenaState.ENDING) {
 			arena.teleportToLobby(player);
-			player.sendMessage(plugin.getChatManager().message("In-Game.You-Are-Spectator"));
+			player.sendMessage(chatManager.message("In-Game.You-Are-Spectator"));
 			player.getInventory().setItem(SpecialItemManager.getSpecialItem("Teleporter").getSlot(), SpecialItemManager.getSpecialItem("Teleporter").getItemStack());
 			player.getInventory().setItem(SpecialItemManager.getSpecialItem("Spectator-Settings").getSlot(), SpecialItemManager.getSpecialItem("Spectator-Settings").getItemStack());
 			player.getInventory().setItem(SpecialItemManager.getSpecialItem("Leave").getSlot(), SpecialItemManager.getSpecialItem("Leave").getItemStack());
@@ -148,9 +149,7 @@ public class ArenaManager {
 		player.setAllowFlight(false);
 		arena.doBarAction(Arena.BarAction.ADD, player);
 
-		if (!user.isSpectator()) {
-//			plugin.getChatManager().broadcastAction(arena, player, ChatManager.ActionType.JOIN);
-		}
+		chatManager.broadcastAction(arena, user, ChatManager.ActionType.JOIN);
 
 		if (arena.getArenaState() == ArenaState.WAITING_FOR_PLAYERS || arena.getArenaState() == ArenaState.STARTING) {
 			player.getInventory().setItem(SpecialItemManager.getSpecialItem("Leave").getSlot(), SpecialItemManager.getSpecialItem("Leave").getItemStack());
@@ -165,18 +164,8 @@ public class ArenaManager {
 
 	}
 
-	/**
-	 * Attempts player to leave arena.
-	 * Calls CDGameLeaveAttemptEvent event.
-	 *
-	 * @param player player to join
-	 * @param arena target arena
-	 * @see CDGameLeaveAttemptEvent
-	 */
 	public static void leaveAttempt(Player player, Arena arena) {
-		long start = System.currentTimeMillis();
-		CDGameLeaveAttemptEvent event = new CDGameLeaveAttemptEvent(arena, player);
-		Bukkit.getPluginManager().callEvent(event);
+		plugin.getServer().getPluginManager().callEvent(new CDGameLeaveAttemptEvent(arena, player));
 		User user = plugin.getUserManager().getUser(player);
 
 		arena.getScoreboardManager().removeScoreboard(player);
@@ -188,16 +177,13 @@ public class ArenaManager {
 			}
 		}
 
+		chatManager.broadcastAction(arena, user, ChatManager.ActionType.LEAVE);
+
 		player.setFlySpeed(0.1f);
 		player.getInventory().clear();
 		player.getInventory().setArmorContents(null);
 		arena.removePlayer(player);
 		arena.teleportToEndLocation(player);
-
-		if (!user.isSpectator()) {
-//			plugin.getChatManager().broadcastAction(arena, player, ChatManager.ActionType.LEAVE);
-		}
-
 		player.setGlowing(false);
 		user.setSpectator(false);
 		player.setCollidable(false);
@@ -240,70 +226,74 @@ public class ArenaManager {
 	 * @see CDGameStopEvent
 	 */
 	public static void stopGame(boolean quickStop, Arena arena) {
-		long start = System.currentTimeMillis();
-		CDGameStopEvent gameStopEvent = new CDGameStopEvent(arena, CDGameStopEvent.StopReason.valueOf(quickStop ? "COMMAND" : "DEFAULT"));
-		Bukkit.getPluginManager().callEvent(gameStopEvent);
+		plugin.getServer().getPluginManager().callEvent(new CDGameStopEvent(arena, CDGameStopEvent.StopReason.valueOf(quickStop ? "COMMAND" : "DEFAULT")));
 
 		if (quickStop) {
-			Bukkit.getScheduler().runTaskLater(plugin, () -> arena.setArenaState(ArenaState.ENDING), 20L * 2);
-			arena.broadcastMessage(plugin.getChatManager().message("In-Game.Messages.Admin-Messages.Stopped-Game"));
+			plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+				arena.setArenaState(ArenaState.ENDING);
+				arena.setTimer(0);
+			}, 20L * 2);
+			
+			arena.broadcastMessage(chatManager.message("In-Game.Messages.Admin-Messages.Stopped-Game"));
 		} else {
-			Bukkit.getScheduler().runTaskLater(plugin, () -> arena.setArenaState(ArenaState.ENDING), 20L * 10);
+			plugin.getServer().getScheduler().runTaskLater(plugin, () -> arena.setArenaState(ArenaState.ENDING), 20L * 10);
 		}
 
 		arena.getScoreboardManager().stopAllScoreboards();
 
-		for (Player player : arena.getPlayers()) {
-			User user = plugin.getUserManager().getUser(player);
+		final String path = "in_game.messages.game_end_messages.", winner = getWinner(arena).getName();
 
-			if (user.getStat(StatsStorage.StatisticType.LOCAL_WON) == 1) {
-				user.addStat(StatsStorage.StatisticType.WINS, 1);
-				user.addStat(StatsStorage.StatisticType.WIN_STREAK, 1);
+		if (!quickStop) {
+			for (Player player : arena.getPlayers()) {
+				User user = plugin.getUserManager().getUser(player);
 
-//				Titles.sendTitle(player, plugin.getChatManager().message("In-Game.Messages.Game-End-Messages.Titles.Win"), plugin.getChatManager().message("In-Game.Messages.Game-End-Messages.Subtitles.Win").replace("%player%", getWinner(arena).getName()), 5, 40, 5);
+				if (user.getStat(StatsStorage.StatisticType.LOCAL_WON) == 1) {
+					user.addStat(StatsStorage.StatisticType.WINS, 1);
+					user.addStat(StatsStorage.StatisticType.WIN_STREAK, 1);
 
-				plugin.getRewardsFactory().performReward(player, Reward.RewardType.WIN);
-			} else if (user.getStat(StatsStorage.StatisticType.LOCAL_WON) == -1) {
-				user.addStat(StatsStorage.StatisticType.LOSES, 1);
-				user.setStat(StatsStorage.StatisticType.WIN_STREAK, 0);
+					Titles.sendTitle(player, 5, 40, 5, chatManager.message(path + "titles.win"), chatManager.message(path + "subtitles.win").replace("%player%", winner));
 
-//				Titles.sendTitle(player, plugin.getChatManager().message("In-Game.Messages.Game-End-Messages.Titles.Lose"), plugin.getChatManager().message("In-Game.Messages.Game-End-Messages.Subtitles.Lose").replace("%player%", getWinner(arena).getName()), 5, 40, 5);
+					plugin.getRewardsFactory().performReward(player, Reward.RewardType.WIN);
+				} else if (user.getStat(StatsStorage.StatisticType.LOCAL_WON) == -1) {
+					user.addStat(StatsStorage.StatisticType.LOSES, 1);
+					user.setStat(StatsStorage.StatisticType.WIN_STREAK, 0);
 
-				plugin.getRewardsFactory().performReward(player, Reward.RewardType.LOSE);
-			} else if (user.isSpectator()) {
-//				Titles.sendTitle(player, plugin.getChatManager().message("In-Game.Messages.Game-End-Messages.Titles.Lose"), plugin.getChatManager().message("In-Game.Messages.Game-End-Messages.Subtitles.Lose").replace("%player%", getWinner(arena).getName()), 5, 40, 5);
-			}
+					Titles.sendTitle(player, 5, 40, 5, chatManager.message(path + "titles.lose"), chatManager.message(path + "subtitles.lose").replace("%player%", winner));
 
-			player.getInventory().clear();
-			player.getInventory().setItem(SpecialItemManager.getSpecialItem("Leave").getSlot(), SpecialItemManager.getSpecialItem("Leave").getItemStack());
-			player.getInventory().setItem(SpecialItemManager.getSpecialItem("Play-Again").getSlot(), SpecialItemManager.getSpecialItem("Play-Again").getItemStack());
+					plugin.getRewardsFactory().performReward(player, Reward.RewardType.LOSE);
+				} else if (user.isSpectator()) {
+					Titles.sendTitle(player, 5, 40, 5, chatManager.message(path + "titles.lose"), chatManager.message(path + "subtitles.lose").replace("%player%", winner));
+				}
 
-			if (!quickStop) {
-				for (String msg : plugin.getChatManager().getStringList("In-Game.Messages.Game-End-Messages.Summary-Message")) {
+				player.getInventory().clear();
+				player.getInventory().setItem(SpecialItemManager.getSpecialItem("Leave").getSlot(), SpecialItemManager.getSpecialItem("Leave").getItemStack());
+				player.getInventory().setItem(SpecialItemManager.getSpecialItem("Play-Again").getSlot(), SpecialItemManager.getSpecialItem("Play-Again").getItemStack());
+
+				for (String msg : chatManager.getStringList(path + "summary_message")) {
 					if (msg.equals("%winner_health_hearts%") && user.getStat(StatsStorage.StatisticType.LOCAL_WON) == -1) {
-						MiscUtils.sendCenteredMessage(player, formatSummaryPlaceholders(plugin.getChatManager().message("Summary-Message-Addition-Opponent-Hearts"), arena, player));
+						MiscUtils.sendCenteredMessage(player, formatSummaryPlaceholders(chatManager.message("Summary-Message-Addition-Opponent-Hearts"), arena, player));
 						continue;
 					}
 
 					MiscUtils.sendCenteredMessage(player, formatSummaryPlaceholders(msg, arena, player));
 				}
-			}
 
-			plugin.getUserManager().saveAllStatistic(user);
+				plugin.getUserManager().saveAllStatistic(user);
 
-			if (!quickStop && plugin.getConfig().getBoolean("Firework-When-Game-Ends", true)) {
-				new BukkitRunnable() {
-					int i = 0;
+				if (plugin.getConfig().getBoolean("Firework-When-Game-Ends", true)) {
+					new BukkitRunnable() {
+						int i = 0;
 
-					public void run() {
-						if (i == 4 || !arena.getPlayers().contains(player) || arena.getArenaState() == ArenaState.RESTARTING) {
-							cancel();
+						public void run() {
+							if (i == 4 || !arena.getPlayers().contains(player) || arena.getArenaState() == ArenaState.RESTARTING) {
+								cancel();
+							}
+
+							MiscUtils.spawnRandomFirework(player.getLocation());
+							i++;
 						}
-
-						MiscUtils.spawnRandomFirework(player.getLocation());
-						i++;
-					}
-				}.runTaskTimer(plugin, 30, 30);
+					}.runTaskTimer(plugin, 30, 30);
+				}
 			}
 		}
 	}
@@ -320,7 +310,7 @@ public class ArenaManager {
 		formatted = StringUtils.replace(formatted, "%winner_melee_accuracy%", getNaNOrArithmetic(StatsStorage.getUserStats(winner, StatsStorage.StatisticType.LOCAL_ACCURATE_HITS), StatsStorage.getUserStats(winner, StatsStorage.StatisticType.LOCAL_MISSED_HITS)));
 		formatted = StringUtils.replace(formatted, "%winner_bow_accuracy%", getNaNOrArithmetic(StatsStorage.getUserStats(winner, StatsStorage.StatisticType.LOCAL_ACCURATE_ARROWS), StatsStorage.getUserStats(winner, StatsStorage.StatisticType.LOCAL_SHOOTED_ARROWS)));
 		formatted = StringUtils.replace(formatted, "%winner_health_regenerated%", Integer.toString(StatsStorage.getUserStats(winner, StatsStorage.StatisticType.LOCAL_HEALTH_REGEN)));
-		formatted = StringUtils.replace(formatted, "%winner_health_hearts%", plugin.getChatManager().coloredRawMessage(IntStream.range(0, 10).mapToObj(i -> Math.round(winner.getHealth() / 2) > i ? "&c❤&r" : "❤").collect(Collectors.joining())));
+		formatted = StringUtils.replace(formatted, "%winner_health_hearts%", chatManager.coloredRawMessage(IntStream.range(0, 10).mapToObj(i -> Math.round(winner.getHealth() / 2) > i ? "&c❤&r" : "❤").collect(Collectors.joining())));
 
 		formatted = StringUtils.replace(formatted, "%loser%", loser != null ? loser.getName() : "");
 		formatted = StringUtils.replace(formatted, "%loser_damage_dealt%", Integer.toString(StatsStorage.getUserStats(loser, StatsStorage.StatisticType.LOCAL_DAMAGE_DEALT) / 2));
